@@ -3,12 +3,62 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const graphemes = new Intl.Segmenter();
+
 function smoothStep(from, to, value) {
   const t = gsap.utils.clamp(0, 1, (value - from) / (to - from));
   return t * t * (3 - 2 * t);
 }
 
-function cachePhoto(card, ratio) {
+function paintCopy(context, copy, media, ratio) {
+  const bounds = media.getBoundingClientRect();
+  const range = document.createRange();
+  const supportsTracking = 'letterSpacing' in context;
+  context.scale(ratio, ratio);
+  context.textAlign = 'left';
+  context.textBaseline = 'alphabetic';
+
+  for (const element of copy.children) {
+    const style = getComputedStyle(element);
+    const fontSize = parseFloat(style.fontSize);
+    context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    context.fillStyle = style.color;
+    if (supportsTracking) context.letterSpacing = style.letterSpacing === 'normal' ? '0px' : style.letterSpacing;
+    const metrics = context.measureText('M');
+    const ascent = metrics.fontBoundingBoxAscent ?? fontSize * 0.8;
+    const descent = metrics.fontBoundingBoxDescent ?? fontSize * 0.2;
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    const lines = new Map();
+
+    // Match the HTML wrapping and alignment, including nonbreaking spaces and explicit line breaks.
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      for (const { segment, index } of graphemes.segment(node.data)) {
+        range.setStart(node, index);
+        range.setEnd(node, index + segment.length);
+        const rect = range.getBoundingClientRect();
+        if (!rect.width || !rect.height) continue;
+
+        let line = lines.get(rect.top);
+        if (!line) {
+          const baseline = rect.top + (rect.height + ascent - descent) / 2;
+          line = { baseline: baseline - bounds.top, glyphs: [] };
+          lines.set(rect.top, line);
+        }
+        line.glyphs.push({ segment, x: rect.left - bounds.left });
+      }
+    }
+
+    for (const { baseline, glyphs } of lines.values()) {
+      if (supportsTracking) {
+        context.fillText(glyphs.map(({ segment }) => segment).join(''), glyphs[0].x, baseline);
+      } else {
+        glyphs.forEach(({ segment, x }) => context.fillText(segment, x, baseline));
+      }
+    }
+  }
+}
+
+function cacheCard(card, ratio) {
   const { element, image, texture } = card;
   if (!image.complete || !image.naturalWidth) return false;
   const { width, height } = texture;
@@ -33,6 +83,7 @@ function cachePhoto(card, ratio) {
   shade.addColorStop(value('--program-shade-end') / 100, `rgba(0, 0, 0, ${value('--program-shade-opacity')})`);
   context.fillStyle = shade;
   context.fillRect(0, 0, width, height);
+  paintCopy(context, card.copy, card.media, ratio);
   context.restore();
   return true;
 }
@@ -87,14 +138,6 @@ export function initProgramsGallery(gallery) {
     let ticking = false;
     let edgeShade;
 
-    function resetDeformation() {
-      gallery.removeAttribute('data-bending');
-      cards.forEach(({ copy }) => {
-        copy.style.removeProperty('translate');
-        copy.style.removeProperty('scale');
-      });
-    }
-
     function render() {
       const shift = -distance * position;
       const offset = startOffset + shift;
@@ -103,8 +146,8 @@ export function initProgramsGallery(gallery) {
         intro.style.opacity = gsap.utils.clamp(0, 1, (offset - introThreshold) / Math.max(1, startOffset - introThreshold));
       }
 
-      if (!cards.every((card) => card.ready || (card.ready = cachePhoto(card, ratio)))) {
-        resetDeformation();
+      if (document.fonts.status === 'loading' || !cards.every((card) => card.ready || (card.ready = cacheCard(card, ratio)))) {
+        gallery.removeAttribute('data-bending');
         return;
       }
 
@@ -150,7 +193,7 @@ export function initProgramsGallery(gallery) {
         };
       }
 
-      cards.forEach(({ texture, left, top, height, copy, copyLeft, copyWidth, copyY }) => {
+      cards.forEach(({ texture, left, top }) => {
         const x = Math.round((left + offset) * ratio);
         const baseTop = top * ratio;
         const sourceMiddle = texture.height / 2;
@@ -184,15 +227,6 @@ export function initProgramsGallery(gallery) {
             projectedLeft, centerY, projectedWidth, (texture.height - sourceMiddle) * lowerScale,
           );
         }
-        const copyX = left + offset + copyLeft;
-        const projectedCopyX = projectX(copyX);
-        const projectedCopyWidth = projectX(copyX + copyWidth) - projectedCopyX;
-        const ribbon = ribbonAt(copyX + copyWidth / 2);
-        const belowCenter = copyY / height * 2 - 1;
-        const shiftY = ribbon.middle + (ribbon.bottom - ribbon.middle) * belowCenter - copyY;
-        const shiftX = projectedCopyX - copyX + ribbon.shear * belowCenter / 2;
-        copy.style.translate = `${shiftX}px ${shiftY}px`;
-        copy.style.scale = `${projectedCopyWidth / copyWidth} 1`;
       });
       context.resetTransform();
       context.globalCompositeOperation = 'source-atop';
@@ -260,10 +294,6 @@ export function initProgramsGallery(gallery) {
         const media = card.media.getBoundingClientRect();
         card.left = bounds.left - trackBounds.left;
         card.top = bounds.top - galleryTop;
-        card.height = bounds.height;
-        card.copyLeft = card.copy.offsetLeft;
-        card.copyWidth = card.copy.offsetWidth;
-        card.copyY = card.copy.offsetTop + card.copy.offsetHeight / 2;
         card.texture.width = Math.round(media.width * ratio);
         card.texture.height = Math.round(media.height * ratio);
         card.ready = false;
@@ -309,11 +339,15 @@ export function initProgramsGallery(gallery) {
     }
 
     measure();
-    const imageLoads = new AbortController();
+    const assetLoads = new AbortController();
     cards.forEach((card) => card.image.addEventListener('load', () => {
       card.ready = false;
       render();
-    }, { signal: imageLoads.signal }));
+    }, { signal: assetLoads.signal }));
+    document.fonts.addEventListener('loadingdone', () => {
+      cards.forEach((card) => { card.ready = false; });
+      render();
+    }, { signal: assetLoads.signal });
 
     const trigger = ScrollTrigger.create({
       trigger: section,
@@ -330,9 +364,9 @@ export function initProgramsGallery(gallery) {
     return () => {
       trigger.kill();
       layoutResize.disconnect();
-      imageLoads.abort();
+      assetLoads.abort();
       stopRipple();
-      resetDeformation();
+      gallery.removeAttribute('data-bending');
       section.removeAttribute('data-programs-scroll');
       section.style.removeProperty('--programs-scroll-distance');
       section.style.removeProperty('--programs-exit-overlap');

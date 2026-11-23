@@ -391,7 +391,6 @@ body:has([data-landing]) {
 
 .program-copy {
   position: absolute;
-  transform-origin: left center;
   z-index: 1;
   inset: 320px 22px auto 20px;
   display: flex;
@@ -454,6 +453,10 @@ body:has([data-landing]) {
 
 .programs-gallery[data-bending] .program-card-media {
   visibility: hidden;
+}
+
+.programs-gallery[data-bending] .program-copy {
+  opacity: 0;
 }
 
 .programs-menu {
