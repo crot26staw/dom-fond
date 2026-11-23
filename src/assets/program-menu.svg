@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="icn-menu">
+<mask id="mask0_0_103" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+<rect id="Bounding box" width="24" height="24" fill="#D9D9D9"/>
+</mask>
+<g mask="url(#mask0_0_103)">
+<path id="dehaze" d="M2.67773 16.4258V14.4258H20.6777V16.4258H2.67773ZM2.67773 10.4258V8.42578H20.6777V10.4258H2.67773Z" fill="white"/>
+</g>
+</g>
+</svg>
