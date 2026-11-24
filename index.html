@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./src/hero-intro.css" />
     <title>Благотворительный фонд «ДОМ»</title>
   </head>
   <body>
@@ -15,6 +16,19 @@
         </div>
         <img class="hero-foreground" src="./src/assets/video.webp" alt="" />
         <div data-header></div>
+        <div class="hero-intro" data-hero-intro aria-hidden="true">
+          <div class="intro-logo">
+            <img class="intro-hand intro-hand-left" src="./src/assets/preloader-hand-right.svg" width="51" height="83" alt="" />
+            <img class="intro-hand intro-hand-right" src="./src/assets/preloader-hand-right.svg" width="51" height="83" alt="" />
+            <img class="intro-house" src="./src/assets/preloader-wordmark.svg" width="368" height="75" alt="" />
+            <img class="intro-wordmark" src="./src/assets/preloader-wordmark.svg" width="368" height="75" alt="" />
+            <span class="intro-window"><i></i><i></i><i></i><i></i></span>
+          </div>
+          <p class="intro-sound">
+            <img src="./src/assets/preloader-headphones.svg" width="20" height="21" alt="" />
+            <span>Включите звук для наилучшего<br />погружения</span>
+          </p>
+        </div>
       </section>
       <section class="programs" id="programs" aria-labelledby="programs-title">
         <div class="programs-scene scene">
@@ -76,42 +90,65 @@
           <div data-header></div>
         </div>
       </section>
-      <section class="stories scene" aria-labelledby="stories-title">
-        <div class="stories-gallery" aria-hidden="true">
-          <img src="./src/assets/stories-rectangle39988.webp" alt="" class="story-photo-soft" style="--x:881px; --y:568px; --w:153px; --h:216px" />
-          <img src="./src/assets/stories-rectangle39998.webp" alt="" style="--x:450px; --y:1040px; --w:153px; --h:233.772px" />
-          <img src="./src/assets/stories-rectangle39999.webp" alt="" style="--x:121px; --y:1092px; --w:153px; --h:233.772px" />
-          <img src="./src/assets/stories-rectangle39988.webp" alt="" class="story-photo-soft" style="--x:756px; --y:1058px; --w:153px; --h:216px" />
-          <img src="./src/assets/stories-rectangle39996.webp" alt="" style="--x:1063px; --y:1058.62px; --w:171.5px; --h:246.375px" />
-          <img src="./src/assets/stories-rectangle39995.webp" alt="" style="--x:1200px; --y:561px; --w:179.5px; --h:248.104px" />
-          <img src="./src/assets/stories-rectangle39993.webp" alt="" style="--x:264px; --y:561px; --w:153px; --h:230.598px" />
-          <img src="./src/assets/stories-rectangle39994.webp" alt="" style="--x:-76px; --y:553px; --w:153px; --h:260.598px" />
-          <img src="./src/assets/stories-rectangle39987.webp" alt="" class="story-photo-soft" style="--x:583px; --y:95px; --w:153px; --h:216px" />
-          <img src="./src/assets/stories-rectangle39989.webp" alt="" style="--x:889px; --y:70.76px; --w:153px; --h:228.806px" />
-          <img src="./src/assets/stories-rectangle39990.webp" alt="" style="--x:264px; --y:49.82px; --w:153px; --h:237.75px" class="story-flip" />
-          <img src="./src/assets/stories-rectangle39992.webp" alt="" style="--x:1210px; --y:1.45px; --w:173px; --h:270.844px" />
-          <img src="./src/assets/stories-rectangle39991.webp" alt="" style="--x:-76px; --y:20.32px; --w:153px; --h:237.75px" class="story-flip" />
-        </div>
-        <div class="stories-title">
-          <p class="eyebrow">Направления нашей деятельности</p>
-          <h2 id="stories-title">Когда казалось, что помощи ждать неоткуда</h2>
-        </div>
-        <article class="story-card" aria-hidden="true">
-          <img src="./src/assets/stories-card.webp" alt="" />
-          <img src="./src/assets/stories-card1.webp" alt="" />
-          <div class="story-caption">
-            <h3>Ольга, 65 лет</h3>
-            <p>Оплатили аренду жилья на 3 месяца и обеспечили семью продуктами</p>
+      <section class="stories" aria-labelledby="stories-title">
+        <div class="stories-scene scene">
+          <div class="stories-gallery" aria-hidden="true">
+            <img src="./src/assets/stories-rectangle39987.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39988.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39989.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39993.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39992.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39987.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39988.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39989.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39993.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39992.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39987.webp" alt="" />
+            <img src="./src/assets/stories-rectangle39988.webp" alt="" />
           </div>
-        </article>
-        <article class="story-card story-card-front">
-          <img src="./src/assets/stories-card.webp" alt="" />
-          <img src="./src/assets/stories-card1.webp" alt="" />
-          <div class="story-caption">
-            <h3>Ольга, 65 лет</h3>
-            <p>Оплатили аренду жилья на 3 месяца и обеспечили семью продуктами</p>
+          <div class="stories-title">
+            <p class="eyebrow">Направления нашей деятельности</p>
+            <h2 id="stories-title">Когда казалось, что помощи ждать неоткуда</h2>
           </div>
-        </article>
+          <div class="story-cards">
+            <article class="story-card">
+              <div class="story-card-face">
+                <img class="story-poster" src="./src/assets/stories-poster.webp" alt="" />
+                <div class="story-caption">
+                  <h3>Альбина<br />и Дмитрий</h3>
+                  <p>Помогаем Дмитрию пройти реабилитацию, восстановить здоровье и вернуться к полноценной жизни</p>
+                </div>
+                <button class="story-play" type="button" data-story-play aria-label="Смотреть историю Альбины и Дмитрия" aria-haspopup="dialog" aria-controls="story-dialog">
+                  <img src="./src/assets/stories-play.svg" alt="" width="24" height="24" />
+                </button>
+              </div>
+            </article>
+            <article class="story-card">
+              <div class="story-card-face">
+                <img class="story-poster" src="./src/assets/stories-poster.webp" alt="" />
+                <div class="story-caption">
+                  <h3>Альбина<br />и Дмитрий</h3>
+                  <p>Помогаем Дмитрию пройти реабилитацию, восстановить здоровье и вернуться к полноценной жизни</p>
+                </div>
+                <button class="story-play" type="button" data-story-play aria-label="Смотреть историю Альбины и Дмитрия" aria-haspopup="dialog" aria-controls="story-dialog">
+                  <img src="./src/assets/stories-play.svg" alt="" width="24" height="24" />
+                </button>
+              </div>
+            </article>
+            <article class="story-card">
+              <div class="story-card-face">
+                <img class="story-poster" src="./src/assets/stories-poster.webp" alt="" />
+                <div class="story-caption">
+                  <h3>Альбина<br />и Дмитрий</h3>
+                  <p>Помогаем Дмитрию пройти реабилитацию, восстановить здоровье и вернуться к полноценной жизни</p>
+                </div>
+                <button class="story-play" type="button" data-story-play aria-label="Смотреть историю Альбины и Дмитрия" aria-haspopup="dialog" aria-controls="story-dialog">
+                  <img src="./src/assets/stories-play.svg" alt="" width="24" height="24" />
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
       </section>
       <section class="founder scene" id="foundation" aria-labelledby="founder-title">
         <img class="scene-image" src="./src/assets/founder-founder.webp" alt="" />
@@ -125,70 +162,91 @@
         <img class="founder-portrait" src="./src/assets/founder-img-man.webp" alt="" />
         <blockquote>«Мы&nbsp;создали систему, в&nbsp;которой добро не&nbsp;заканчивается после одного пожертвования. Нам важно, чтобы помощь продолжалась&nbsp;— сегодня, завтра и&nbsp;через много лет»</blockquote>
       </section>
-      <section class="about light-section" aria-labelledby="about-title">
-        <div class="section-title">
-          <p class="eyebrow">Как это работает</p>
-          <h2 id="about-title">Помощь, которая<br />не заканчивается</h2>
-        </div>
-        <div class="about-layout">
-          <div class="about-steps" role="group" aria-label="Как работает целевой капитал">
-            <button type="button" aria-pressed="true" data-step="0">Вы делаете вклад</button>
-            <button type="button" aria-pressed="false" data-step="1">Капитал работает</button>
-            <button type="button" aria-pressed="false" data-step="2">Доход идёт на помощь</button>
+      <section class="about light-section" aria-labelledby="about-title" data-about>
+        <div class="about-scene">
+          <div class="section-title">
+            <p class="eyebrow">Как это работает</p>
+            <h2 id="about-title">Помощь, которая<br />не заканчивается</h2>
           </div>
-          <div class="about-art" aria-hidden="true">
-            <img src="./src/assets/about-repeat-group1.svg" alt="" />
-            <img src="./src/assets/about-repeat-group2.svg" alt="" />
-            <img src="./src/assets/about-image1271224811.webp" alt="" />
+          <div class="about-layout">
+            <div class="about-steps" role="group" aria-label="Как работает целевой капитал">
+              <button type="button" aria-pressed="true" aria-controls="about-details">Вы делаете вклад</button>
+              <button type="button" aria-pressed="false" aria-controls="about-details">Капитал работает</button>
+              <button type="button" aria-pressed="false" aria-controls="about-details">Доход идёт на помощь</button>
+            </div>
+            <div class="about-art" aria-hidden="true">
+              <div class="about-ring"></div>
+              <div class="about-ring about-ring-progress"></div>
+              <img class="about-illustration" data-step-art src="./src/assets/about-image1271224811.webp" alt="" />
+              <img class="about-illustration" data-step-art src="./src/assets/about-sprout.webp" alt="" aria-hidden="true" />
+              <img class="about-illustration" data-step-art src="./src/assets/about-support.webp" alt="" aria-hidden="true" />
+            </div>
+            <div class="about-details" id="about-details" aria-live="polite" aria-atomic="true">
+              <div class="about-panel" data-step-copy>
+                <p class="about-step-title">Вы делаете вклад</p>
+                <p class="body-copy">Любая сумма пополняет целевой капитал фонда, который строго контролируется и&nbsp;защищён законом (№ 275-ФЗ).</p>
+              </div>
+              <div class="about-panel" data-step-copy aria-hidden="true">
+                <p class="about-step-title">Капитал работает</p>
+                <p class="body-copy">Средства передаются управляющей компании с&nbsp;лицензией ЦБ&nbsp;РФ и&nbsp;инвестируются в&nbsp;консервативные надёжные инструменты.</p>
+              </div>
+              <div class="about-panel" data-step-copy aria-hidden="true">
+                <p class="about-step-title">Доход идёт на помощь</p>
+                <p class="body-copy">Вся прибыль от&nbsp;инвестиций регулярно превращается в&nbsp;реальную помощь. Ваш вклад становится вечным двигателем добра.</p>
+              </div>
+            </div>
           </div>
-          <p class="body-copy" data-step-copy aria-live="polite">Любая сумма пополняет целевой капитал фонда, который строго контролируется и&nbsp;защищён законом (№ 275-ФЗ).</p>
         </div>
       </section>
-      <section class="numbers light-section" aria-labelledby="numbers-title">
-        <div class="section-title">
-          <p class="eyebrow">Что мы уже сделали</p>
-          <h2 id="numbers-title">Дом сегодня</h2>
+      <section class="numbers light-section" aria-labelledby="numbers-title" data-numbers>
+        <div class="numbers-scene">
+          <div class="section-title">
+            <p class="eyebrow">Что мы уже сделали</p>
+            <h2 id="numbers-title">Дом сегодня</h2>
+          </div>
+          <div class="numbers-house"><img src="./src/assets/numbers-img-house.webp" alt="" /></div>
+          <div class="number-cards-viewport" role="region" aria-label="Показатели фонда">
+            <ol class="number-cards">
+              <li style="--angle:-4deg; --slot:348.721">
+                <div class="number-card">
+                  <span>01</span>
+                  <div>
+                    <p class="number-prefix">Более</p>
+                    <p class="number-value">40&nbsp;000&nbsp;000 ₽</p>
+                    <p class="body-copy">в эндаумент-капитале фонда</p>
+                  </div>
+                </div>
+              </li>
+              <li style="--angle:2deg; --slot:336.065">
+                <div class="number-card">
+                  <span>02</span>
+                  <div>
+                    <p class="number-value">3 500+</p>
+                    <p class="body-copy">обращений обработано</p>
+                  </div>
+                </div>
+              </li>
+              <li style="--angle:-2deg; --slot:336.065">
+                <div class="number-card">
+                  <span>03</span>
+                  <div>
+                    <p class="number-value">1200+</p>
+                    <p class="body-copy">людей получили помощь</p>
+                  </div>
+                </div>
+              </li>
+              <li style="--angle:0deg; --slot:323">
+                <div class="number-card">
+                  <span>04</span>
+                  <div>
+                    <p class="number-value">240+</p>
+                    <p class="body-copy">юридических вопросов решено</p>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </div>
         </div>
-        <div class="numbers-house"><img src="./src/assets/numbers-img-house.webp" alt="" /></div>
-        <ol class="number-cards">
-          <li style="--angle:-4deg; --slot:348.721px">
-            <div class="number-card">
-              <span>01</span>
-              <div>
-                <p class="number-prefix">Более</p>
-                <p class="number-value">40&nbsp;000&nbsp;000 ₽</p>
-                <p class="body-copy">в эндаумент-капитале фонда</p>
-              </div>
-            </div>
-          </li>
-          <li style="--angle:2deg; --slot:336.065px">
-            <div class="number-card">
-              <span>02</span>
-              <div>
-                <p class="number-value">3 500+</p>
-                <p class="body-copy">обращений обработано</p>
-              </div>
-            </div>
-          </li>
-          <li style="--angle:-2deg; --slot:336.065px">
-            <div class="number-card">
-              <span>03</span>
-              <div>
-                <p class="number-value">1200+</p>
-                <p class="body-copy">людей получили помощь</p>
-              </div>
-            </div>
-          </li>
-          <li style="--angle:0deg; --slot:323px">
-            <div class="number-card">
-              <span>04</span>
-              <div>
-                <p class="number-value">240+</p>
-                <p class="body-copy">юридических вопросов решено</p>
-              </div>
-            </div>
-          </li>
-        </ol>
       </section>
       <section class="capital light-section" id="endowment" aria-labelledby="capital-title">
         <img class="capital-art" src="./src/assets/capital-video.webp" alt="" />
@@ -197,7 +255,7 @@
           <p class="body-copy">Каждый день возникают разные ситуации, в которых людям нужна поддержка. Ваши пожертвования позволяют фонду помогать там, где это необходимо</p>
         </div>
         <div class="capital-total">
-          <p class="capital-value">40 000 000 ₽</p>
+          <p class="capital-value" data-capital-value><span class="capital-value-source">40 000 000 ₽</span></p>
           <p class="capital-label">в эндуаменте капитала</p>
           <p class="capital-note">Долгосрочная финансовая опора, которая помогает сохранять устойчивость фонда</p>
         </div>
@@ -216,19 +274,22 @@
         </ol>
         <div class="documents">
           <h3>Каждый рубль — на виду</h3>
-          <div class="document-list">
-            <div class="document-row"><div><h4>Устав фонда</h4><p>от 17.10.2026</p></div><span>PDF · 2,7 MB</span></div>
-            <div class="document-row document-featured"><div><h4>Оферта на пожертвование</h4><p>от 17.10.2026</p></div><img src="./src/assets/transparency-icn-arrow.svg" alt="" width="24" height="24" /></div>
-            <div class="document-row"><div><h4>Лист записи ЕГРЮЛ</h4><p>от 17.10.2026</p></div><span>PDF · 2,7 MB</span></div>
-            <div class="document-row"><div><h4>Выписка из ЕГРН</h4><p>от 17.10.2026</p></div><span>PDF · 2,7 MB</span></div>
-            <div class="document-row"><div><h4>Политика обработки персональных данных</h4><p>от 17.10.2026</p></div><span>PDF · 2,7 MB</span></div>
-            <div class="document-row"><div><h4>Реквизиты компании</h4><p>от 17.10.2026</p></div><span>PDF · 2,7 MB</span></div>
-            <div class="document-row document-long"><div><h4>Форма отзыва согласия на обработку персональных данных</h4><p>от 17.10.2026</p></div><span>PDF · 2,7 MB</span></div>
-            <div class="document-row document-long"><div><h4>Согласние на обработку персональных данных</h4><p>от 17.10.2026</p></div><span>PDF · 2,7 MB</span></div>
-            <aside class="document-preview" aria-hidden="true">
+          <div class="document-list" data-document-list>
+            <div class="document-row"><div><h4>Устав фонда</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-row" data-preview-title="Оферта на&#10;пожертвование"><div><h4>Оферта на пожертвование</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-row" data-preview-title="Лист записи&#10;ЕГРЮЛ"><div><h4>Лист записи ЕГРЮЛ</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-row" data-preview-title="Выписка&#10;из ЕГРН"><div><h4>Выписка из ЕГРН</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-row" data-preview-title="Политика&#10;конфиденциальности"><div><h4>Политика обработки персональных данных</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-row" data-preview-title="Реквизиты&#10;компании"><div><h4>Реквизиты компании</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-row" data-preview-title="Отзыв согласия&#10;на обработку&#10;данных"><div><h4>Форма отзыва согласия на обработку персональных данных</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-row" data-preview-title="Согласие&#10;на обработку&#10;данных"><div><h4>Согласие на обработку персональных данных</h4><p>от 17.10.2026</p></div><span class="document-file">PDF · 2,7 MB</span></div>
+            <div class="document-preview" aria-hidden="true">
               <img src="./src/assets/transparency-image1271224814.webp" alt="" width="100" height="100" />
-              <div><strong>Устав фонда</strong><p class="body-copy">от 17.10.2026</p></div>
-            </aside>
+              <div class="document-preview-copy">
+                <div class="document-preview-titles"><strong data-current>Устав фонда</strong></div>
+                <p class="body-copy">ред. 2026</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -371,6 +432,13 @@
         </summary>
       </details>
     </template>
+    <dialog class="story-dialog" id="story-dialog" aria-label="Видео истории" data-lenis-prevent>
+      <button class="story-close" type="button" aria-label="Закрыть видео" autofocus>
+        <img src="./src/assets/donate-dialog-flowbite-arrow-left-outline.svg" alt="" width="44" height="44" />
+      </button>
+      <video controls playsinline preload="none" aria-label="Видео истории Альбины и Дмитрия"></video>
+      <p class="story-video-error" hidden>Не удалось загрузить видео.</p>
+    </dialog>
     <dialog class="landing landing-dialog" id="action-dialog" aria-labelledby="dialog-title" data-lenis-prevent>
       <img class="scene-image" src="./src/assets/donate-dialog-pop-up.webp" alt="" />
       <img class="scene-image" src="./src/assets/donate-dialog-pop-up1.webp" alt="" />

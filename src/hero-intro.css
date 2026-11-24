@@ -1,0 +1,132 @@
+.hero-intro {
+  --reveal-progress: 0;
+  --reveal-center: calc(-495.5px + (100dvh + 495.5px) * var(--reveal-progress));
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, #0a0f1b 18%, #070b12 100%);
+  color: rgb(255 255 255 / 82%);
+  mask-image: linear-gradient(transparent var(--reveal-center), #000 var(--reveal-center)),
+    url("./assets/preloader-mask.svg");
+  mask-position: center, center calc(var(--reveal-center) - 495.5px);
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%, max(calc(100% + 927px), 164.4%) 991px;
+  mask-composite: subtract;
+}
+
+.intro-logo {
+  position: absolute;
+  --logo-width: 404px;
+  inset: 4px 0 0;
+  width: var(--logo-width);
+  height: calc(var(--logo-width) * 104 / 404);
+  margin: auto;
+}
+
+.intro-logo img,
+.intro-window {
+  position: absolute;
+}
+
+.intro-hand {
+  top: 0;
+  width: 12.71%;
+  height: auto;
+}
+
+.intro-hand-left {
+  left: 0;
+  scale: -1 1;
+}
+
+.intro-hand-right {
+  left: 24.75%;
+}
+
+.intro-house,
+.intro-wordmark {
+  top: 23.77%;
+  left: 8.89%;
+  width: 91.15%;
+  height: auto;
+}
+
+.intro-house {
+  clip-path: inset(0 73% 0 0);
+}
+
+.intro-wordmark {
+  clip-path: inset(0 0 0 27%);
+}
+
+.intro-window {
+  top: 71.61%;
+  left: 16.17%;
+  display: grid;
+  grid-template: repeat(2, 1fr) / repeat(2, 1fr);
+  gap: 9%;
+  width: 5.56%;
+  height: 17.66%;
+}
+
+.intro-window i {
+  border-radius: 21%;
+  background: #b4966e;
+}
+
+.intro-sound {
+  position: absolute;
+  inset: auto 0 50px;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  margin: 0;
+  font: 400 14px / 1.1 Manrope, sans-serif;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.intro-sound img {
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  padding: 5.5px 6px;
+}
+
+@media (max-width: 999px) {
+  .intro-logo {
+    --logo-width: 290.88px;
+  }
+}
+
+@media (max-width: 599px) {
+  .intro-logo {
+    --logo-width: 202px;
+  }
+}
+
+/* Paint the curtain before the module loads and give the page back if it fails. */
+.hero-intro:not([data-intro-active]) {
+  animation: intro-unavailable 8s step-end forwards;
+}
+
+.hero-intro:not([data-intro-active]) > * {
+  visibility: hidden;
+}
+
+@keyframes intro-unavailable {
+  to {
+    visibility: hidden;
+  }
+}
+
+body:has(:target:not(#top)) .hero-intro:not([data-intro-active]) {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .hero-intro {
+    display: none;
+  }
+}
