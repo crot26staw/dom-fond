@@ -59,7 +59,7 @@ function paintCopy(context, copy, media, ratio) {
 }
 
 function cacheCard(card, ratio) {
-  const { element, image, texture } = card;
+  const { element, image, media, texture } = card;
   if (!image.complete || !image.naturalWidth) return false;
   const { width, height } = texture;
   const context = texture.getContext('2d');
@@ -71,7 +71,7 @@ function cacheCard(card, ratio) {
   const cropWidth = width / scale;
   const cropHeight = height / scale;
   card.crop = [(image.naturalWidth - cropWidth) / 2, (image.naturalHeight - cropHeight) / 2, cropWidth, cropHeight];
-  card.radius = value('--program-photo-radius') * ratio;
+  card.radius = parseFloat(getComputedStyle(media).borderTopLeftRadius) * ratio;
 
   context.save();
   const shade = context.createLinearGradient(0, 0, 0, height);
@@ -216,12 +216,16 @@ export function initProgramsGallery(gallery) {
       width = gallery.clientWidth;
       if (!width) return;
       const styles = getComputedStyle(gallery);
-      const pixels = (property) => parseFloat(styles.getPropertyValue(property));
+      const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const pixels = (property) => {
+        const length = styles.getPropertyValue(property).trim();
+        return parseFloat(length) * (length.endsWith('rem') ? rootSize : 1);
+      };
       const gap = pixels('--programs-heading-gap');
       const headingBottom = heading.getBoundingClientRect().bottom - scene.getBoundingClientRect().top;
       minHeight = pixels('--program-card-min-height');
       maxHeight = pixels('--program-card-max-height');
-      ribbonRadius = width / 2 - 12;
+      ribbonRadius = width / 2 - 0.75 * rootSize;
       gallery.style.setProperty('--programs-card-top', `${headingBottom + gap}px`);
       if (width < 600) {
         const introTop = headingBottom + Math.max(0, (gap - intro.offsetHeight) / 2);
@@ -241,7 +245,7 @@ export function initProgramsGallery(gallery) {
       desktop = width >= 1000;
       if (!desktop) intro.style.removeProperty('opacity');
       startOffset = parseFloat(getComputedStyle(track).marginInlineStart);
-      introThreshold = intro.offsetLeft + intro.offsetWidth + 9 + width * 0.035;
+      introThreshold = intro.offsetLeft + intro.offsetWidth + 0.5625 * rootSize + width * 0.035;
       const gutter = pixels('--programs-gutter');
       const lastCardWidth = cards.at(-1).element.offsetWidth;
       const endGutter = Math.max(gutter, (width - lastCardWidth) / 2);

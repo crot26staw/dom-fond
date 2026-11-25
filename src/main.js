@@ -163,18 +163,20 @@ function initStoriesGallery(staticGallery) {
     let elapsed = 0;
     let width;
     let photoWidth;
+    let photoHeight;
     let pitch;
     let wrap;
 
     function draw() {
+      const scale = photoHeight / 215;
       for (const { row, bow, phase, speed } of rows) {
-        const shift = phase * pitch + elapsed * speed;
+        const shift = phase * pitch + elapsed * speed * scale;
         for (let index = 0; index < row.children.length; index += 1) {
           const x = wrap(index * pitch + shift);
           const edge = gsap.utils.clamp(-1, 1, 2 * (x + photoWidth / 2) / width - 1);
-          const y = bow * 65 * edge ** 2;
+          const y = bow * 65 * edge ** 2 * scale;
           const photo = row.children[index];
-          const height = bow === 0 ? 200 + 30 * edge ** 2 : 215;
+          const height = bow === 0 ? (200 + 30 * edge ** 2) * scale : photoHeight;
           const tilt = edge * Math.abs(edge) * bow * 10;
           const shearHeight = photoWidth * Math.abs(Math.tan(tilt * Math.PI / 180));
           if (bow === 0) photo.style.height = height + 'px';
@@ -187,7 +189,9 @@ function initStoriesGallery(staticGallery) {
     function resize() {
       const firstRow = rows[0].row;
       width = gallery.clientWidth;
-      photoWidth = parseFloat(getComputedStyle(firstRow.firstElementChild).width);
+      const photoStyle = getComputedStyle(firstRow.firstElementChild);
+      photoWidth = parseFloat(photoStyle.width);
+      photoHeight = parseFloat(photoStyle.height);
       pitch = photoWidth + parseFloat(getComputedStyle(firstRow).columnGap);
 
       // Loop whole copies of the photo sequence and wrap only beyond the visible area.
@@ -229,8 +233,8 @@ function initStoriesGallery(staticGallery) {
     visibility.observe(gallery);
     document.addEventListener('visibilitychange', updatePlayback);
 
-    gsap.fromTo(gallery, { y: -95 }, {
-      y: 95,
+    gsap.fromTo(gallery, { '--stories-gallery-offset': -1 }, {
+      '--stories-gallery-offset': 1,
       ease: 'none',
       scrollTrigger: {
         trigger: section,
@@ -485,7 +489,6 @@ function initNumbers(section) {
         },
         '--numbers-deck-follow': 1,
       }, { x: 0, y: 0, '--numbers-deck-follow': 0 }, start);
-      rise.set(card, { zIndex: 0 }, start + cardDuration);
 
       if (narrow && index > 0) {
         rise.fromTo(viewport, {
@@ -593,25 +596,26 @@ function initDocumentPreview(list) {
   let hoveredRow;
 
   function placePreview() {
-    if (!desktop.matches) return;
+    if (preview.hidden || !activeRow) return;
 
     const titleHeight = currentTitle.offsetHeight;
     const cardHeight = preview.offsetHeight - titleBox.offsetHeight + titleHeight;
-    const rowTop = activeRow ? activeRow.offsetTop + (activeRow.offsetHeight - cardHeight) / 2 : 0;
+    const rowTop = activeRow.offsetTop + (activeRow.offsetHeight - cardHeight) / 2;
     const top = Math.max(0, Math.min(rowTop, list.clientHeight - cardHeight));
     preview.style.setProperty('--document-preview-title-height', `${titleHeight}px`);
     preview.style.setProperty('--document-preview-top', `${top}px`);
   }
 
   function selectRow(row) {
-    if (row === activeRow) return;
-
-    activeRow?.removeAttribute('data-document-active');
-    activeRow = row;
-    activeRow?.setAttribute('data-document-active', '');
-    currentTitle.removeAttribute('data-current');
-    currentTitle = titles.get(row) ?? defaultTitle;
-    currentTitle.setAttribute('data-current', '');
+    preview.hidden = !hoveredRow;
+    if (row !== activeRow) {
+      activeRow?.removeAttribute('data-document-active');
+      activeRow = row;
+      activeRow?.setAttribute('data-document-active', '');
+      currentTitle.removeAttribute('data-current');
+      currentTitle = titles.get(row) ?? defaultTitle;
+      currentTitle.setAttribute('data-current', '');
+    }
     placePreview();
   }
 
@@ -630,7 +634,7 @@ function initDocumentPreview(list) {
 
   list.addEventListener('focusin', (event) => {
     if (!desktop.matches) return;
-    selectRow(event.target.closest('.document-row') ?? hoveredRow);
+    selectRow(hoveredRow ?? event.target.closest('.document-row'));
   });
 
   list.addEventListener('focusout', (event) => {
@@ -807,12 +811,12 @@ function initDonationScene(section) {
   gsap.matchMedia().add('(prefers-reduced-motion: no-preference) and (min-height: 620px)', () => {
     section.dataset.donationScroll = '';
     const transition = gsap.timeline()
-      .to(poster, { filter: 'blur(8px)', scale: 0.82, duration: 0.23, ease: 'power1.inOut' }, 0.1)
+      .to(poster, { filter: 'blur(0.5rem)', scale: 0.82, duration: 0.23, ease: 'power1.inOut' }, 0.1)
       .fromTo(backdrop, { '--donation-reveal': 0 }, {
         '--donation-reveal': 1, duration: 0.47, ease: 'power1.inOut',
       }, 0.25)
       .to(intro, { autoAlpha: 0, duration: 0.27, ease: 'power1.inOut' }, 0.29)
-      .fromTo(panel, { autoAlpha: 0, scale: 0.88, y: 12 }, {
+      .fromTo(panel, { autoAlpha: 0, scale: 0.88, y: '0.75rem' }, {
         autoAlpha: 1, scale: 1, y: 0, duration: 0.22, ease: 'power1.inOut',
       }, 0.72)
       .set(panel, { autoAlpha: 1 }, 1);
