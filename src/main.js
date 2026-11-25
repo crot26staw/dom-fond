@@ -287,8 +287,8 @@ initStoryCards(landing?.querySelector('.stories'));
 initStoriesGallery(landing?.querySelector('.stories-gallery'));
 
 const dialog = document.querySelector('#action-dialog');
-const storyDialog = document.querySelector('#story-dialog');
-const storyVideo = storyDialog.querySelector('video');
+const videoDialog = document.querySelector('#story-dialog');
+const player = videoDialog.querySelector('video');
 const dialogPanel = dialog.querySelector('[data-dialog-panel]');
 const dialogLogo = header.content.querySelector('.landing-logo').cloneNode(true);
 dialog.querySelector('[data-dialog-brand]').append(dialogLogo);
@@ -302,7 +302,7 @@ if (landing) {
     smoothScroll.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(advanceScroll);
     gsap.ticker.lagSmoothing(0);
-    if (dialog.open || storyDialog.open) smoothScroll.stop();
+    if (dialog.open || videoDialog.open) smoothScroll.stop();
 
     return () => {
       gsap.ticker.remove(advanceScroll);
@@ -639,10 +639,294 @@ function initDocumentPreview(list) {
   syncViewport();
 }
 
+function initBreadVideoCursor(scene) {
+  let pointer;
+  let hoveredButton;
+  let refreshPending = false;
+
+  function positionLabel(button) {
+    if (button !== hoveredButton) hoveredButton?.removeAttribute('data-follow-pointer');
+    hoveredButton = button;
+    if (!button) return;
+
+    const { left, top } = button.getBoundingClientRect();
+    button.style.setProperty('--bread-pointer-x', `${pointer.x - left}px`);
+    button.style.setProperty('--bread-pointer-y', `${pointer.y - top}px`);
+    button.dataset.followPointer = '';
+  }
+
+  function trackPointer(event) {
+    if (event.pointerType !== 'mouse') return;
+
+    pointer = { x: event.clientX, y: event.clientY };
+    positionLabel(event.target.closest('.watch-button'));
+  }
+
+  function refreshPointer() {
+    if (!pointer || refreshPending) return;
+    refreshPending = true;
+    requestAnimationFrame(() => {
+      refreshPending = false;
+      if (!pointer) return;
+
+      const target = document.elementFromPoint(pointer.x, pointer.y);
+      positionLabel(scene.contains(target) ? target.closest('.watch-button') : null);
+    });
+  }
+
+  scene.addEventListener('pointerover', trackPointer);
+  scene.addEventListener('pointermove', trackPointer);
+  scene.addEventListener('pointerleave', (event) => {
+    if (event.pointerType !== 'mouse') return;
+    pointer = undefined;
+    positionLabel(null);
+  });
+  window.addEventListener('scroll', refreshPointer, { passive: true });
+  window.addEventListener('resize', refreshPointer);
+}
+
+function initBreadScene(section) {
+  if (!section) return;
+
+  const scene = section.querySelector('.bread-scene');
+  const cards = [...scene.querySelectorAll('.bread-card')];
+  const content = cards.map((card) => card.querySelector('.bread-content'));
+  const buttons = cards.map((card) => card.querySelector('.watch-button'));
+  const previous = section.previousElementSibling;
+  const previousBackground = previous?.querySelector('.scene-image');
+  const motion = '(prefers-reduced-motion: no-preference)';
+  const pinSizes = [
+    '(min-width: 1000px) and (min-height: 520px)',
+    '(min-width: 600px) and (max-width: 999px) and (min-height: 800px)',
+    '(max-width: 599px) and (min-height: 665px)',
+  ];
+
+  initBreadVideoCursor(scene);
+
+  gsap.matchMedia().add(pinSizes.map((size) => `${motion} and ${size}`).join(', '), () => {
+    section.dataset.breadScroll = '';
+    const transitionProgress = gsap.utils.pipe(
+      gsap.utils.normalize(0.14, 0.84),
+      gsap.utils.clamp(0, 1),
+      gsap.parseEase('power1.inOut'),
+    );
+    let activeIndex = -1;
+
+    function updateScene({ progress }) {
+      const reveal = transitionProgress(progress);
+      scene.style.setProperty('--bread-scene-progress', reveal);
+      section.toggleAttribute('data-bread-advanced', progress > 0);
+      const nextIndex = reveal < 0.5 ? 0 : 1;
+      if (nextIndex === activeIndex) return;
+
+      const focusedButton = buttons[activeIndex] === document.activeElement;
+      activeIndex = nextIndex;
+      cards.forEach((card, index) => {
+        card.toggleAttribute('data-active', index === activeIndex);
+        if (index === activeIndex) content[index].removeAttribute('aria-hidden');
+        else content[index].setAttribute('aria-hidden', 'true');
+      });
+      if (focusedButton) buttons[activeIndex].focus({ preventScroll: true });
+    }
+
+    function refreshScene(trigger) {
+      // Match the visible edge of the preceding section while the scene stays centered.
+      if (previousBackground?.naturalHeight) {
+        scene.style.setProperty('--bread-previous-height', `${previous.offsetHeight}px`);
+        scene.style.setProperty('--bread-previous-ratio', previousBackground.naturalWidth / previousBackground.naturalHeight);
+      }
+      updateScene(trigger);
+    }
+
+    updateScene({ progress: 0 });
+    const trigger = ScrollTrigger.create({
+      trigger: section,
+      start: () => `top ${getComputedStyle(scene).top}`,
+      end: () => `+=${section.offsetHeight - scene.offsetHeight}`,
+      onUpdate: updateScene,
+      onRefresh: refreshScene,
+    });
+
+    function revealFocusedButton(event) {
+      const index = buttons.indexOf(event.target);
+      if (index < 0 || index === activeIndex) return;
+
+      // Bring a keyboard-focused button into view at its fully revealed state.
+      const progress = index === 0 ? 0.08 : 0.92;
+      const target = gsap.utils.interpolate(trigger.start, trigger.end, progress);
+      if (lenis) lenis.scrollTo(target, { immediate: true });
+      else window.scrollTo(0, target);
+      trigger.update();
+    }
+
+    scene.addEventListener('focusin', revealFocusedButton);
+    return () => {
+      scene.removeEventListener('focusin', revealFocusedButton);
+      scene.style.removeProperty('--bread-scene-progress');
+      scene.style.removeProperty('--bread-previous-height');
+      scene.style.removeProperty('--bread-previous-ratio');
+      delete section.dataset.breadScroll;
+      delete section.dataset.breadAdvanced;
+      cards.forEach((card, index) => {
+        card.removeAttribute('data-active');
+        content[index].removeAttribute('aria-hidden');
+      });
+    };
+  });
+}
+
+function initDonationScene(section) {
+  if (!section) return;
+
+  const scene = section.querySelector('.donation-scene');
+  const intro = scene.querySelector('.donation-intro');
+  const poster = scene.querySelector('.donation-poster');
+  const backdrop = scene.querySelector('.donation-backdrop');
+  const panel = scene.querySelector('.donation-panel');
+  const skip = intro.querySelector('[data-donation-skip]');
+  const nextSection = section.nextElementSibling;
+  const social = nextSection?.matches('.social') ? nextSection : null;
+
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference) and (min-height: 620px)', () => {
+    section.dataset.donationScroll = '';
+    const transition = gsap.timeline()
+      .to(poster, { filter: 'blur(8px)', scale: 0.82, duration: 0.23, ease: 'power1.inOut' }, 0.1)
+      .fromTo(backdrop, { '--donation-reveal': 0 }, {
+        '--donation-reveal': 1, duration: 0.47, ease: 'power1.inOut',
+      }, 0.25)
+      .to(intro, { autoAlpha: 0, duration: 0.27, ease: 'power1.inOut' }, 0.29)
+      .fromTo(panel, { autoAlpha: 0, scale: 0.88, y: 12 }, {
+        autoAlpha: 1, scale: 1, y: 0, duration: 0.22, ease: 'power1.inOut',
+      }, 0.72)
+      .set(panel, { autoAlpha: 1 }, 1);
+
+    function syncInteractivity({ progress }) {
+      intro.toggleAttribute('inert', progress >= 0.33);
+      panel.toggleAttribute('inert', progress < 0.9);
+    }
+
+    syncInteractivity({ progress: 0 });
+    const trigger = ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      endTrigger: social ?? section,
+      end: () => social ? `top ${scene.offsetHeight}px` : `+=${section.offsetHeight - scene.offsetHeight}`,
+      animation: transition,
+      scrub: true,
+      onUpdate: syncInteractivity,
+      onRefresh: syncInteractivity,
+    });
+
+    function revealForm() {
+      const target = gsap.utils.interpolate(trigger.start, trigger.end, 0.96);
+      if (lenis) lenis.scrollTo(target, { immediate: true });
+      else window.scrollTo(0, target);
+      trigger.update();
+    }
+
+    function skipToForm() {
+      revealForm();
+      panel.querySelector('input[name="frequency"]:checked').focus({ preventScroll: true });
+    }
+
+    function revealCoveredField({ target }) {
+      if (!social) return;
+      requestAnimationFrame(() => {
+        if (document.activeElement !== target || !section.hasAttribute('data-donation-scroll')) return;
+        if (social.getBoundingClientRect().top < target.getBoundingClientRect().bottom) revealForm();
+      });
+    }
+
+    skip.addEventListener('click', skipToForm);
+    panel.addEventListener('focusin', revealCoveredField);
+    return () => {
+      skip.removeEventListener('click', skipToForm);
+      panel.removeEventListener('focusin', revealCoveredField);
+      delete section.dataset.donationScroll;
+      intro.inert = false;
+      panel.inert = false;
+    };
+  });
+}
+
+function initFaq(list) {
+  if (!list?.childElementCount) return;
+
+  const questions = [...list.children];
+  const group = questions[0].getAttribute('name');
+
+  if (!('name' in HTMLDetailsElement.prototype)) {
+    list.addEventListener('toggle', ({ target }) => {
+      // The named group is handled here only when the browser doesn't support it.
+      if (!target.matches('.faq-item[name][open]')) return;
+
+      list.querySelectorAll('.faq-item[name][open]').forEach((item) => {
+        if (item !== target) item.open = false;
+      });
+    }, true);
+  }
+
+  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+    function settleQuestion(item, expanded) {
+      const [summary, answer] = item.children;
+      item.open = expanded;
+      item.setAttribute('name', group);
+      item.style.removeProperty('height');
+      summary.removeAttribute('aria-expanded');
+      answer.inert = false;
+    }
+
+    function animateQuestion(item, expanded) {
+      const [summary, answer] = item.children;
+      const height = item.getBoundingClientRect().height;
+      if (expanded) {
+        item.setAttribute('name', group);
+        item.open = true;
+      } else {
+        // Keep the answer rendered while the next question opens.
+        item.removeAttribute('name');
+      }
+      summary.setAttribute('aria-expanded', String(expanded));
+      answer.inert = !expanded;
+
+      gsap.fromTo(item, { height }, {
+        height: expanded ? 'auto' : summary.getBoundingClientRect().height,
+        duration: 0.28,
+        ease: 'power2.inOut',
+        overwrite: true,
+        onComplete: () => settleQuestion(item, expanded),
+      });
+    }
+
+    function toggleQuestion(event) {
+      const summary = event.target.closest('.faq-item > summary');
+      if (!summary) return;
+
+      event.preventDefault();
+      const item = summary.parentElement;
+      const active = list.querySelector('.faq-item[name][open]');
+      if (active) animateQuestion(active, false);
+      if (item !== active) animateQuestion(item, true);
+    }
+
+    list.addEventListener('click', toggleQuestion);
+    return () => {
+      list.removeEventListener('click', toggleQuestion);
+      questions.forEach((item) => {
+        gsap.killTweensOf(item);
+        settleQuestion(item, item.open && item.hasAttribute('name'));
+      });
+    };
+  });
+}
+
 initAboutSteps(landing?.querySelector('[data-about]'));
 initNumbers(landing?.querySelector('[data-numbers]'));
 initCapitalTyping(landing?.querySelector('[data-capital-value]'));
 initDocumentPreview(landing?.querySelector('[data-document-list]'));
+initBreadScene(landing?.querySelector('[data-bread-scene]'));
+initDonationScene(landing?.querySelector('[data-donation-scene]'));
+initFaq(landing?.querySelector('.faq-list'));
 
 let dialogTrigger;
 document.addEventListener('click', (event) => {
@@ -661,64 +945,84 @@ document.addEventListener('click', (event) => {
 dialog.querySelector('[data-dialog-close]').addEventListener('click', () => dialog.close());
 dialogLogo.addEventListener('click', () => dialog.close());
 dialog.addEventListener('close', () => {
-  if (!storyDialog.open) lenis?.start();
+  if (!videoDialog.open) lenis?.start();
   dialogTrigger?.focus({ preventScroll: true });
 });
 
-let storyTrigger;
-const storyError = storyDialog.querySelector('.story-video-error');
+const videos = {
+  story: { title: 'Видео истории Альбины и Дмитрия', source: storyVideoUrl },
+  bread: { title: 'Видео о бесплатном хлебе', source: storyVideoUrl },
+  'spiritual-support': { title: 'Видео о духовной поддержке', source: storyVideoUrl },
+  donation: { title: 'Видео о фонде', source: storyVideoUrl },
+};
+let videoTrigger;
+const videoError = videoDialog.querySelector('.story-video-error');
 
 landing?.addEventListener('click', (event) => {
-  const trigger = event.target.closest('[data-story-play]');
-  if (!trigger || storyDialog.open) return;
+  const trigger = event.target.closest('[data-story-play], [data-project-video], [data-video]');
+  if (!trigger || videoDialog.open) return;
 
-  storyTrigger = trigger;
-  storyError.hidden = true;
-  if (!storyVideo.hasAttribute('src') || storyVideo.error) storyVideo.src = storyVideoUrl;
-  storyDialog.showModal();
+  const { title, source } = videos[trigger.dataset.video ?? trigger.dataset.projectVideo ?? 'story'];
+  videoTrigger = trigger;
+  videoDialog.setAttribute('aria-label', title);
+  player.setAttribute('aria-label', title);
+  videoError.hidden = true;
+  if (player.getAttribute('src') !== source || player.error) {
+    player.style.removeProperty('--video-ratio');
+    player.src = source;
+  }
+  videoDialog.showModal();
   lenis?.stop();
-  storyVideo.play().catch(() => {
-    if (storyVideo.error && storyDialog.open) storyError.hidden = false;
+  player.play().catch(() => {
+    if (player.error && videoDialog.open) videoError.hidden = false;
   });
 });
 
-storyVideo.addEventListener('error', () => {
-  storyError.hidden = false;
+player.addEventListener('loadedmetadata', () => {
+  if (player.videoHeight) player.style.setProperty('--video-ratio', player.videoWidth / player.videoHeight);
 });
 
-storyDialog.querySelector('.story-close').addEventListener('click', () => storyDialog.close());
-storyDialog.addEventListener('click', (event) => {
-  if (event.target === storyDialog) storyDialog.close();
+player.addEventListener('error', () => {
+  if (videoDialog.open) videoError.hidden = false;
 });
 
-storyDialog.addEventListener('close', () => {
-  storyVideo.pause();
-  storyVideo.currentTime = 0;
+videoDialog.querySelector('.story-close').addEventListener('click', () => videoDialog.close());
+videoDialog.addEventListener('click', (event) => {
+  if (event.target === videoDialog) videoDialog.close();
+});
+
+videoDialog.addEventListener('close', () => {
+  if (videoDialog.open) return;
+
+  player.pause();
+  player.currentTime = 0;
   if (!dialog.open) lenis?.start();
-  storyTrigger?.focus({ preventScroll: true });
+  videoTrigger?.focus({ preventScroll: true });
 });
 
-dialog.addEventListener('click', (event) => {
-  const preset = event.target.closest('[data-amount]');
+function syncAmountPresets(amount) {
+  amount.form.querySelectorAll('[data-amount]').forEach((item) => {
+    item.setAttribute('aria-pressed', String(item.dataset.amount === amount.value));
+  });
+}
+
+document.addEventListener('click', (event) => {
+  const preset = event.target.closest('[data-static-form] [data-amount]');
   if (!preset) return;
 
   const amount = preset.form.elements.amount;
   amount.value = preset.dataset.amount;
-  preset.form.querySelectorAll('[data-amount]').forEach((item) => {
-    item.setAttribute('aria-pressed', String(item === preset));
-  });
+  syncAmountPresets(amount);
   if (!amount.value) amount.focus();
 });
 
-dialog.addEventListener('input', (event) => {
-  if (event.target.name !== 'amount') return;
-
-  event.target.form.querySelectorAll('[data-amount]').forEach((item) => {
-    item.setAttribute('aria-pressed', String(item.dataset.amount === event.target.value));
-  });
+document.addEventListener('input', (event) => {
+  if (event.target.matches('[data-static-form] input[name="amount"]')) syncAmountPresets(event.target);
 });
 
-dialog.addEventListener('submit', (event) => {
+document.addEventListener('submit', (event) => {
+  if (!event.target.matches('form[data-static-form]')) return;
+
   event.preventDefault();
   event.target.querySelector('.form-message').hidden = false;
 });

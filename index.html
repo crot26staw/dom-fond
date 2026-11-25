@@ -293,34 +293,94 @@
           </div>
         </div>
       </section>
-      <section class="bread scene" aria-labelledby="bread-title">
-        <img class="scene-image" src="./src/assets/bread-frame2136143166.webp" alt="" />
-        <div class="bread-veil"></div>
-        <div class="bread-picture" aria-hidden="true">
-          <img src="./src/assets/bread-frame2136143166.webp" alt="" />
-          <div class="bread-picture-detail">
-            <img class="scene-image" src="./src/assets/bread-img.webp" alt="" />
-            <img src="./src/assets/bread-img1.webp" alt="" />
-          </div>
+      <section class="bread" id="projects" data-bread-scene aria-label="Проекты фонда">
+        <div class="bread-scene">
+          <article class="bread-card" aria-labelledby="bread-title">
+            <div class="bread-picture" aria-hidden="true"></div>
+            <div class="bread-content">
+              <div class="bread-copy section-title">
+                <h2 id="bread-title">Иногда помощь<br />начинается<br class="bread-narrow-break" /> с самого<br class="bread-wide-break" /> простого</h2>
+                <p>Каждый день человек может получить хлеб<br class="bread-narrow-break" /> и свежую выпечку бесплатно</p>
+              </div>
+              <p class="bread-note">Без справок.<br />Без анкет.<br />Без объяснений.</p>
+            </div>
+            <button class="watch-button" type="button" data-project-video="bread" aria-label="Смотреть видео о бесплатном хлебе" aria-haspopup="dialog" aria-controls="story-dialog">
+              <span class="watch-label">Смотреть <span><img src="./src/assets/bread-arrow-back2.svg" alt="" width="24" height="24" /></span></span>
+            </button>
+          </article>
+          <article class="bread-card" aria-labelledby="spiritual-support-title">
+            <div class="bread-picture" aria-hidden="true"></div>
+            <div class="bread-content">
+              <div class="bread-copy section-title">
+                <h2 id="spiritual-support-title">Иногда человеку нужна не только материальная помощь</h2>
+                <p>Мы&nbsp;помогаем людям найти духовную поддержку, обрести надежду и&nbsp;почувствовать, что они не&nbsp;одни</p>
+              </div>
+              <p class="bread-note">Для тех, кто ищет опору.<br />Смысл и путь к богу</p>
+            </div>
+            <button class="watch-button" type="button" data-project-video="spiritual-support" aria-label="Смотреть видео о духовной поддержке" aria-haspopup="dialog" aria-controls="story-dialog">
+              <span class="watch-label">Смотреть <span><img src="./src/assets/bread-arrow-back2.svg" alt="" width="24" height="24" /></span></span>
+            </button>
+          </article>
         </div>
-        <div class="bread-copy section-title">
-          <h2 id="bread-title">Иногда помощь<br />начинается с самого<br />простого</h2>
-          <p>Каждый день человек может получить хлеб и свежую выпечку бесплатно</p>
-        </div>
-        <p class="bread-note">Без справок.<br />Без анкет.<br />Без объяснений.</p>
-        <button class="watch-button" type="button" disabled>
-          Смотреть <span><img src="./src/assets/bread-arrow-back2.svg" alt="" width="24" height="24" /></span>
-        </button>
       </section>
-      <section class="donation-intro light-section" aria-labelledby="donation-intro-title">
-        <div class="section-title">
-          <h2 id="donation-intro-title">Чтобы изменить чью-то жизнь,<br />не нужно многого. Достаточно<br />не пройти мимо</h2>
-        </div>
-        <div class="donation-poster">
-          <img src="./src/assets/donation-video.webp" alt="" />
-          <button type="button" disabled aria-label="Воспроизвести видео">
-            <img src="./src/assets/donation-play-arrow.svg" alt="" width="24" height="24" />
-          </button>
+      <section class="donation" id="donation" data-donation-scene aria-labelledby="donation-intro-title">
+        <div class="donation-scene">
+          <div class="donation-intro light-section">
+            <div class="section-title">
+              <h2 id="donation-intro-title">Чтобы изменить чью-то жизнь,<br /> не нужно многого. Достаточно<br /> не пройти мимо</h2>
+            </div>
+            <div class="donation-poster">
+              <img src="./src/assets/donation-video.webp" alt="" />
+              <button type="button" data-video="donation" aria-label="Воспроизвести видео о фонде" aria-haspopup="dialog" aria-controls="story-dialog">
+                <img src="./src/assets/donation-play-arrow.svg" alt="" width="24" height="24" />
+              </button>
+            </div>
+            <button class="donation-skip pill pill-accent" type="button" data-donation-skip>Перейти к форме пожертвования</button>
+          </div>
+          <div class="donation-backdrop" aria-hidden="true"></div>
+          <div class="donation-panel">
+            <form class="donation-form" aria-labelledby="donation-form-title" data-static-form>
+              <div class="donation-form-copy">
+                <p class="eyebrow">Пожертвовать</p>
+                <h3 id="donation-form-title">Всё добро, которое вы делаете, обязательно к вам вернётся</h3>
+                <p class="body-copy">Выберите сумму и формат — разово или ежемесячно. Ваш вклад войдёт в эндаумент-капитал фонда</p>
+              </div>
+              <div class="donation-form-controls">
+                <div class="donation-form-fields">
+                  <fieldset class="donation-frequency" aria-label="Регулярность пожертвования">
+                    <label><input name="frequency" type="radio" value="once" checked />Разовое пожертвование</label>
+                    <label><input name="frequency" type="radio" value="monthly" />Ежемесячная помощь</label>
+                  </fieldset>
+                  <div class="donation-amount">
+                    <div><input class="dialog-field" name="amount" value="1000" type="number" min="1" inputmode="numeric" aria-label="Сумма в рублях" required /><span>₽</span></div>
+                    <div class="amount-presets" role="group" aria-label="Предлагаемые суммы">
+                      <button type="button" data-amount="500" aria-pressed="false">500</button>
+                      <button type="button" data-amount="1000" aria-pressed="true">1000</button>
+                      <button type="button" data-amount="5000" aria-pressed="false">5 000</button>
+                      <button type="button" data-amount="10000" aria-pressed="false">10 000</button>
+                      <button type="button" data-amount="" aria-pressed="false">Другое</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="dialog-submit">
+                  <button class="pill pill-accent" type="submit">Пожертвовать</button>
+                  <div class="payment-icons">
+                    <span>Безопасная оплата</span>
+                    <img src="./src/assets/donate-dialog-group2.svg" alt="Mastercard" width="20" />
+                    <img src="./src/assets/donate-dialog-cib-visa.svg" alt="Visa" width="37" />
+                    <img src="./src/assets/donate-dialog-thesvg-mir.svg" alt="Мир" width="41" />
+                    <img src="./src/assets/donate-dialog-group4.svg" alt="СБП" width="38" />
+                  </div>
+                  <p class="form-message" role="status" hidden>Оплата пока недоступна.</p>
+                </div>
+              </div>
+              <div class="donation-hearts" aria-hidden="true">
+                <img class="donation-heart-large" src="./src/assets/donation-heart-large.svg" alt="" width="94" height="156" />
+                <img class="donation-heart-left" src="./src/assets/donation-heart-left.svg" alt="" width="23" height="39" />
+                <img class="donation-heart-upper" src="./src/assets/donation-heart-upper.svg" alt="" width="23" height="39" />
+              </div>
+            </form>
+          </div>
         </div>
       </section>
       <section class="social scene" aria-labelledby="social-title">
@@ -341,15 +401,30 @@
           <h2 id="faq-title">Возможно, у вас<br />остались вопросы?</h2>
         </div>
         <div class="faq-list">
-          <details class="faq-item" open>
+          <details class="faq-item" name="dom-faq" open>
             <summary>Что такое эндаумент и чем он отличается от обычного фонда?<span aria-hidden="true">+</span></summary>
+            <p class="body-copy">Ответ готовится.</p>
+          </details>
+          <details class="faq-item" name="dom-faq">
+            <summary>Какая минимальная сумма пожертвования?<span aria-hidden="true">+</span></summary>
             <p class="body-copy">Минимальной суммы пожертвования нет. Вы можете поддержать фонд любой удобной для вас суммой. Даже небольшой вклад помогает формировать целевой капитал фонда. Каждое пожертвование важно для нашего общего дела.</p>
           </details>
-          <div class="faq-item faq-placeholder"><div>Какая минимальная сумма пожертвования?<span aria-hidden="true">+</span></div></div>
-          <div class="faq-item faq-placeholder"><div>Как подтвердить пожертвование?<span aria-hidden="true">+</span></div></div>
-          <div class="faq-item faq-placeholder"><div>Куда именно идут деньги?<span aria-hidden="true">+</span></div></div>
-          <div class="faq-item faq-placeholder"><div>Можно ли пожертвовать анонимно?<span aria-hidden="true">+</span></div></div>
-          <div class="faq-item faq-placeholder"><div>Кто управляет фондом?<span aria-hidden="true">+</span></div></div>
+          <details class="faq-item" name="dom-faq">
+            <summary>Как подтвердить пожертвование?<span aria-hidden="true">+</span></summary>
+            <p class="body-copy">Ответ готовится.</p>
+          </details>
+          <details class="faq-item" name="dom-faq">
+            <summary>Куда именно идут деньги?<span aria-hidden="true">+</span></summary>
+            <p class="body-copy">Ответ готовится.</p>
+          </details>
+          <details class="faq-item" name="dom-faq">
+            <summary>Можно ли пожертвовать анонимно?<span aria-hidden="true">+</span></summary>
+            <p class="body-copy">Ответ готовится.</p>
+          </details>
+          <details class="faq-item" name="dom-faq">
+            <summary>Кто управляет фондом?<span aria-hidden="true">+</span></summary>
+            <p class="body-copy">Ответ готовится.</p>
+          </details>
         </div>
       </section>
     </main>
@@ -432,11 +507,11 @@
         </summary>
       </details>
     </template>
-    <dialog class="story-dialog" id="story-dialog" aria-label="Видео истории" data-lenis-prevent>
+    <dialog class="story-dialog" id="story-dialog" aria-label="Видео" data-lenis-prevent>
       <button class="story-close" type="button" aria-label="Закрыть видео" autofocus>
         <img src="./src/assets/donate-dialog-flowbite-arrow-left-outline.svg" alt="" width="44" height="44" />
       </button>
-      <video controls playsinline preload="none" aria-label="Видео истории Альбины и Дмитрия"></video>
+      <video controls playsinline preload="none"></video>
       <p class="story-video-error" hidden>Не удалось загрузить видео.</p>
     </dialog>
     <dialog class="landing landing-dialog" id="action-dialog" aria-labelledby="dialog-title" data-lenis-prevent>
