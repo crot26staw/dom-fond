@@ -3,30 +3,33 @@ import 'lenis/dist/lenis.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
+import { initHeroMotion } from './hero-motion.js';
 import { initProgramsGallery } from './programs-gallery.js';
 import storyVideoUrl from './assets/stories-video.mp4?url';
 
 const landing = document.querySelector('[data-landing]');
 
-function initHeroIntro(hero) {
-  const intro = hero?.querySelector('[data-hero-intro]');
+function initHeroIntro(intro, syncHeader) {
   if (!intro) return;
-  if (window.location.hash && window.location.hash !== '#top') {
+
+  const motionQuery = '(prefers-reduced-motion: no-preference)';
+  if (!window.matchMedia(motionQuery).matches || (window.location.hash && window.location.hash !== '#top')) {
     intro.hidden = true;
     return;
   }
 
-  const header = hero.querySelector('.landing-header');
-  gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
-    intro.hidden = false;
+  gsap.matchMedia().add(motionQuery, () => {
+    if (intro.hidden) return;
+
     intro.dataset.introActive = '';
+    syncHeader();
     const logo = intro.querySelector('.intro-logo');
     const house = intro.querySelector('.intro-house');
     const hands = intro.querySelectorAll('.intro-hand');
     const panes = intro.querySelectorAll('.intro-window i');
     const wordmark = intro.querySelector('.intro-wordmark');
 
-    gsap.timeline()
+    const logoAnimation = gsap.timeline()
       .set(logo, { xPercent: 31.06 }, 0)
       .fromTo(hands, { opacity: 0, xPercent: (index) => index === 0 ? -48 : 48, yPercent: 24 },
         { opacity: 1, xPercent: 0, yPercent: 0, duration: 0.55, ease: 'power2.out' }, 0.34)
@@ -38,30 +41,17 @@ function initHeroIntro(hero) {
       .fromTo(wordmark, { opacity: 0, yPercent: 10 },
         { opacity: 1, yPercent: 0, duration: 0.66, ease: 'power2.inOut' }, 2.5);
 
-    const reveal = gsap.to(intro, { '--reveal-progress': 1, ease: 'none' });
-    function updateCurtain({ progress }) {
-      const revealed = progress === 1;
-      intro.hidden = revealed;
-      header.inert = !revealed;
+    function finishIntro() {
+      intro.hidden = true;
+      delete intro.dataset.introActive;
+      syncHeader();
     }
 
-    ScrollTrigger.create({
-      trigger: hero,
-      start: 'top top',
-      end: () => `+=${hero.offsetHeight}`,
-      animation: reveal,
-      pin: true,
-      scrub: true,
-      refreshPriority: 1,
-      onUpdate: updateCurtain,
-      onRefresh: updateCurtain,
-    });
+    gsap.timeline({ onComplete: finishIntro })
+      .add(logoAnimation.timeScale(2))
+      .to(intro, { '--reveal-progress': 1, duration: 1, ease: 'sine.inOut' });
 
-    return () => {
-      delete intro.dataset.introActive;
-      intro.hidden = true;
-      header.inert = false;
-    };
+    return finishIntro;
   });
 }
 
@@ -236,7 +226,7 @@ function initStoriesGallery(staticGallery) {
       inView = entry.isIntersecting;
       updatePlayback();
     });
-    visibility.observe(section);
+    visibility.observe(gallery);
     document.addEventListener('visibilitychange', updatePlayback);
 
     gsap.fromTo(gallery, { y: -95 }, {
@@ -244,9 +234,9 @@ function initStoriesGallery(staticGallery) {
       ease: 'none',
       scrollTrigger: {
         trigger: section,
-        start: 'top bottom',
+        start: 'top top',
         end: 'bottom top',
-        scrub: 0.6,
+        scrub: true,
       },
     });
 
@@ -261,27 +251,55 @@ function initStoriesGallery(staticGallery) {
   });
 }
 
-const header = document.querySelector('#landing-header');
-document.querySelectorAll('[data-header]').forEach((slot) => {
-  const content = header.content.cloneNode(true);
-  if (slot.closest('.programs')) {
-    content.querySelector('.pill-sound img').src = new URL('./assets/music-programs.svg', import.meta.url).href;
-    const menu = document.querySelector('#programs-menu').content.firstElementChild.cloneNode(true);
-    menu.append(content.querySelector('.landing-nav').cloneNode(true));
-    content.querySelector('.landing-actions').append(menu);
-    menu.addEventListener('click', (event) => {
-      if (event.target.closest('a')) menu.open = false;
-    });
-    menu.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape' || !menu.open) return;
+function initLandingHeader(landing) {
+  const header = landing?.querySelector('.landing-header');
+  const hero = landing?.querySelector('.hero');
+  if (!header || !hero) return;
+
+  const intro = hero.querySelector('[data-hero-intro]');
+  const programs = hero.nextElementSibling;
+  function syncHeader() {
+    const overHero = programs.getBoundingClientRect().top >= 1;
+    header.toggleAttribute('data-filled-nav', !overHero);
+    header.inert = overHero && intro?.hasAttribute('data-intro-active');
+  }
+
+  initHeroIntro(intro, syncHeader);
+  syncHeader();
+  window.addEventListener('scroll', syncHeader, { passive: true });
+  new ResizeObserver(syncHeader).observe(hero);
+
+  const menu = header.querySelector('.landing-menu');
+  const nav = menu.querySelector('.landing-nav');
+  const compact = window.matchMedia('(max-width: 1105px)');
+  function placeNavigation() {
+    menu.open = false;
+    menu.hidden = !compact.matches;
+    if (compact.matches) menu.append(nav);
+    else header.prepend(nav);
+  }
+  placeNavigation();
+  compact.addEventListener('change', placeNavigation);
+
+  menu.addEventListener('click', (event) => {
+    if (event.target.closest('a, [data-dialog]')) menu.open = false;
+  });
+  menu.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && menu.open) {
       menu.open = false;
       menu.querySelector('summary').focus();
-    });
-  }
-  slot.replaceWith(content);
-});
+    }
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (menu.open && !menu.contains(event.target)) menu.open = false;
+  });
+  menu.addEventListener('focusout', (event) => {
+    if (event.relatedTarget && !menu.contains(event.relatedTarget)) menu.open = false;
+  });
+}
 
-initHeroIntro(landing?.querySelector('.hero'));
+initLandingHeader(landing);
+initHeroMotion(landing?.querySelector('.hero'));
 initProgramsGallery(landing?.querySelector('[data-programs-gallery]'));
 initStoryCards(landing?.querySelector('.stories'));
 initStoriesGallery(landing?.querySelector('.stories-gallery'));
@@ -290,8 +308,7 @@ const dialog = document.querySelector('#action-dialog');
 const videoDialog = document.querySelector('#story-dialog');
 const player = videoDialog.querySelector('video');
 const dialogPanel = dialog.querySelector('[data-dialog-panel]');
-const dialogLogo = header.content.querySelector('.landing-logo').cloneNode(true);
-dialog.querySelector('[data-dialog-brand]').append(dialogLogo);
+const dialogLogo = dialog.querySelector('.dialog-brand');
 
 let lenis;
 if (landing) {
@@ -936,7 +953,7 @@ document.addEventListener('click', (event) => {
   const form = document.getElementById(trigger.dataset.dialog);
   dialogPanel.replaceChildren(form.content.cloneNode(true));
   dialog.querySelector('[data-donate-caption]').hidden = trigger.dataset.dialog !== 'donate';
-  dialogTrigger = trigger;
+  dialogTrigger = trigger.closest('.landing-menu')?.querySelector('summary') ?? trigger;
   dialog.showModal();
   lenis?.stop();
   dialog.querySelector('[data-dialog-close]').focus({ preventScroll: true });

@@ -8,14 +8,50 @@
   </head>
   <body>
     <main class="landing" data-landing id="top">
-      <section class="hero scene" aria-labelledby="hero-title">
-        <img class="scene-image" src="./src/assets/hero.webp" alt="" fetchpriority="high" />
-        <div class="hero-title">
-          <h1 id="hero-title"><img src="./src/assets/tagline.svg" alt="Дом, который оберегает каждого" /></h1>
-          <p>Благотворительный фонд «ДОМ»</p>
+      <header class="landing-header">
+        <a class="landing-logo" href="#top" aria-label="Фонд ДОМ — начало страницы">
+          <picture>
+            <source media="(max-width: 1105px)" srcset="./src/assets/header-logo-compact.svg" width="130" height="32" />
+            <img src="./src/assets/header-logo.svg" alt="" width="178" height="44" />
+          </picture>
+        </a>
+        <div class="landing-actions">
+          <button class="pill pill-sound" type="button" aria-label="Звук" disabled>
+            <img src="./src/assets/music.svg" alt="" width="24" height="18" />
+          </button>
+          <button class="pill pill-white" type="button" data-dialog="request-help">Нужна помощь</button>
+          <button class="pill pill-accent" type="button" data-dialog="donate">Помочь</button>
+          <details class="landing-menu" data-lenis-prevent>
+            <summary aria-label="Меню">
+              <img src="./src/assets/program-menu.svg" alt="" width="24" height="24" />
+            </summary>
+            <nav class="landing-nav" aria-label="Главная навигация">
+              <a class="pill pill-outline" href="#programs">Программы</a>
+              <a class="pill pill-outline" href="#foundation">Фонд</a>
+              <a class="pill pill-outline" href="#transparency">Прозрачность</a>
+              <a class="pill pill-outline" href="#faq">Вопросы</a>
+              <button class="pill pill-white" type="button" data-dialog="request-help">Нужна помощь</button>
+            </nav>
+          </details>
         </div>
-        <img class="hero-foreground" src="./src/assets/video.webp" alt="" />
-        <div data-header></div>
+      </header>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-scene scene">
+          <div class="hero-camera">
+            <img class="scene-image" src="./src/assets/hero-scroll-poster.webp" alt="" fetchpriority="high" />
+            <video class="scene-image hero-video" preload="auto" muted playsinline aria-hidden="true" hidden></video>
+            <img class="scene-image hero-window-still" src="./src/assets/hero-window.webp" alt="" hidden />
+          </div>
+          <div class="hero-window" aria-hidden="true" hidden>
+            <div class="room-view hero-window-room" hidden></div>
+            <div class="hero-window-shadow"></div>
+          </div>
+          <div class="hero-title">
+            <h1 id="hero-title"><img src="./src/assets/tagline.svg" alt="Дом, который оберегает каждого" /></h1>
+            <p>Благотворительный фонд «ДОМ»</p>
+          </div>
+          <img class="hero-foreground" src="./plants_48_webp_frames/frame_001.webp" width="1600" height="512" alt="" />
+        </div>
         <div class="hero-intro" data-hero-intro aria-hidden="true">
           <div class="intro-logo">
             <img class="intro-hand intro-hand-left" src="./src/assets/preloader-hand-right.svg" width="51" height="83" alt="" />
@@ -32,7 +68,10 @@
       </section>
       <section class="programs" id="programs" aria-labelledby="programs-title">
         <div class="programs-scene scene">
-          <img class="scene-image programs-backdrop" src="./src/assets/programs.webp" alt="" />
+          <div class="room-view programs-room" aria-hidden="true"></div>
+          <div class="programs-curtain" aria-hidden="true">
+            <img class="scene-image programs-backdrop" src="./src/assets/programs.webp" alt="" />
+          </div>
           <div class="programs-title">
             <p class="eyebrow">Направления нашей деятельности</p>
             <h2 id="programs-title">Здесь начинается помощь</h2>
@@ -87,7 +126,6 @@
               </article>
             </div>
           </div>
-          <div data-header></div>
         </div>
       </section>
       <section class="stories" aria-labelledby="stories-title">
@@ -477,36 +515,6 @@
         </div>
       </div>
     </footer>
-    <template id="landing-header">
-      <header class="landing-header">
-        <nav class="landing-nav" aria-label="Главная навигация">
-          <a class="pill pill-outline" href="#programs">Программы</a>
-          <a class="pill pill-outline" href="#foundation">Фонд</a>
-          <a class="pill pill-outline" href="#transparency">Прозрачность</a>
-          <a class="pill pill-outline" href="#faq">Вопросы</a>
-        </nav>
-        <a class="landing-logo" href="#top" aria-label="Фонд ДОМ — начало страницы">
-          <span class="logo-window" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-          <img class="logo-right" src="./src/assets/logo-right.svg" alt="" />
-          <img class="logo-left" src="./src/assets/logo-left.svg" alt="" />
-          <img class="logo-wordmark" src="./src/assets/logo-wordmark.svg" alt="" />
-        </a>
-        <div class="landing-actions">
-          <button class="pill pill-sound" type="button" aria-label="Звук" disabled>
-            <img src="./src/assets/music.svg" alt="" width="24" height="18" />
-          </button>
-          <button class="pill pill-white" type="button" data-dialog="request-help">Нужна помощь</button>
-          <button class="pill pill-accent" type="button" data-dialog="donate">Помочь</button>
-        </div>
-      </header>
-    </template>
-    <template id="programs-menu">
-      <details class="programs-menu">
-        <summary aria-label="Меню">
-          <img src="./src/assets/program-menu.svg" alt="" width="24" height="24" />
-        </summary>
-      </details>
-    </template>
     <dialog class="story-dialog" id="story-dialog" aria-label="Видео" data-lenis-prevent>
       <button class="story-close" type="button" aria-label="Закрыть видео" autofocus>
         <img src="./src/assets/donate-dialog-flowbite-arrow-left-outline.svg" alt="" width="44" height="44" />
@@ -518,7 +526,9 @@
       <img class="scene-image" src="./src/assets/donate-dialog-pop-up.webp" alt="" />
       <img class="scene-image" src="./src/assets/donate-dialog-pop-up1.webp" alt="" />
       <div class="dialog-veil" aria-hidden="true"></div>
-      <div class="dialog-brand" data-dialog-brand></div>
+      <a class="dialog-brand" href="#top" aria-label="Фонд ДОМ — начало страницы">
+        <img src="./src/assets/header-logo.svg" alt="" width="178" height="44" />
+      </a>
       <div class="dialog-caption" data-donate-caption>
         <strong>Один вклад — помощь<br />на долгие годы</strong>
         <div><p>- Вы помогаете сегодня</p><p>- Ваш вклад работает годами</p></div>

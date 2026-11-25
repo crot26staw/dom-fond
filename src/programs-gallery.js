@@ -67,17 +67,13 @@ function cacheCard(card, ratio) {
 
   const styles = getComputedStyle(element);
   const value = (property) => parseFloat(styles.getPropertyValue(property));
-  const radius = value('--program-photo-radius') * ratio;
   const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-  const imageWidth = image.naturalWidth * scale;
-  const imageHeight = image.naturalHeight * scale;
-  const left = (width - imageWidth) / 2;
+  const cropWidth = width / scale;
+  const cropHeight = height / scale;
+  card.crop = [(image.naturalWidth - cropWidth) / 2, (image.naturalHeight - cropHeight) / 2, cropWidth, cropHeight];
+  card.radius = value('--program-photo-radius') * ratio;
 
   context.save();
-  context.beginPath();
-  context.roundRect(0, 0, width, height, radius);
-  context.clip();
-  context.drawImage(image, left, (height - imageHeight) / 2, imageWidth, imageHeight);
   const shade = context.createLinearGradient(0, 0, 0, height);
   shade.addColorStop(value('--program-shade-start') / 100, 'transparent');
   shade.addColorStop(value('--program-shade-end') / 100, `rgba(0, 0, 0, ${value('--program-shade-opacity')})`);
@@ -93,6 +89,7 @@ export function initProgramsGallery(gallery) {
 
   const section = gallery.closest('.programs');
   const scene = gallery.closest('.programs-scene');
+  const curtain = scene.querySelector('.programs-curtain');
   const heading = scene.querySelector('h2');
   const intro = scene.querySelector('.programs-intro');
   const nextSection = section.nextElementSibling;
@@ -122,28 +119,61 @@ export function initProgramsGallery(gallery) {
     let width = 0;
     let ratio = 1;
     let minHeight = 0;
-    let edgeHeight = 0;
     let maxHeight = 0;
-    let cardRadius = 0;
     let ribbonRadius = 0;
     let startOffset = 0;
     let introThreshold = 0;
     let desktop = false;
     let distance = 0;
+    let entryDistance = 0;
+    let trackStartScroll = 0;
+    let firstCardScroll = 0;
     let scrollDistance = 0;
     let position = 0;
-    let lastScrollTime = 0;
-    let pull = 0;
-    let ripple = 0;
-    let ticking = false;
+    let entryProgress = 0;
     let edgeShade;
 
+    function ribbonAt(pixelX) {
+      const x = pixelX / ratio;
+      const drop = smoothStep(0, ribbonRadius, Math.abs(x - width / 2));
+      const height = maxHeight - (maxHeight - minHeight) * drop;
+      const curve = Math.sin((x / width - 0.5) * Math.PI * 1.2 + 0.72);
+      const top = (maxHeight - height) * (0.52 + curve * 0.10);
+      return {
+        top: top * ratio,
+        bottom: (top + height) * ratio,
+      };
+    }
+
+    function clipCard(left, right, radius) {
+      const first = left + radius;
+      const last = right - radius;
+      const start = ribbonAt(first);
+      const end = ribbonAt(last);
+      const step = 16 * ratio;
+      context.beginPath();
+      context.moveTo(first, start.top);
+      for (let x = first + step; x < last; x += step) context.lineTo(x, ribbonAt(x).top);
+      context.lineTo(last, end.top);
+      context.quadraticCurveTo(right, end.top, right, end.top + radius);
+      context.lineTo(right, end.bottom - radius);
+      context.quadraticCurveTo(right, end.bottom, last, end.bottom);
+      for (let x = last - step; x > first; x -= step) context.lineTo(x, ribbonAt(x).bottom);
+      context.lineTo(first, start.bottom);
+      context.quadraticCurveTo(left, start.bottom, left, start.bottom - radius);
+      context.lineTo(left, start.top + radius);
+      context.quadraticCurveTo(left, start.top, first, start.top);
+      context.closePath();
+      context.clip();
+    }
+
     function render() {
-      const shift = -distance * position;
-      const offset = startOffset + shift;
-      moveTrack(shift);
+      const offset = width - distance * position;
+      moveTrack(offset - startOffset);
       if (desktop) {
-        intro.style.opacity = gsap.utils.clamp(0, 1, (offset - introThreshold) / Math.max(1, startOffset - introThreshold));
+        const arrivalOpacity = smoothStep(0.18, 0.49, entryProgress);
+        const trackOpacity = gsap.utils.clamp(0, 1, (offset - introThreshold) / Math.max(1, startOffset - introThreshold));
+        intro.style.opacity = arrivalOpacity * trackOpacity;
       }
 
       if (document.fonts.status === 'loading' || !cards.every((card) => card.ready || (card.ready = cacheCard(card, ratio)))) {
@@ -153,82 +183,28 @@ export function initProgramsGallery(gallery) {
 
       context.clearRect(0, 0, canvas.width, canvas.height);
       const step = Math.max(1, Math.round(3 * ratio));
-      const circumference = Math.PI * 2;
-      const magnification = desktop ? 0.22 : 0.15;
-      const pullAmplitude = Math.min(36, width * 0.032) * Math.abs(ripple);
-
-      function projectX(x) {
-        if (x < 0) return x * (1 - magnification);
-        if (x > width) return width + (x - width) * (1 - magnification);
-        const phase = x / width * circumference;
-        return x - Math.sin(phase) * magnification * width / circumference;
-      }
-
-      function ribbonAt(x) {
-        const screen = x / width - 0.5;
-        const fromCenter = Math.abs(x - width / 2);
-        const lens = 1 - smoothStep(0.08, 0.35, Math.abs(screen));
-        const curve = Math.sin(screen * Math.PI * 1.2 + 0.72);
-        // The flutter travels with the unbroken ribbon, while the lens stays fixed in the viewport.
-        const materialX = (x - offset) / width;
-        const flutter = Math.sin(materialX * circumference * 1.3 + ripple * 2.1) * lens;
-        const flex = flutter * Math.abs(ripple) * 0.45;
-        const onCenterCard = fromCenter <= cardRadius;
-        const drop = onCenterCard
-          ? smoothStep(0, cardRadius, fromCenter)
-          : smoothStep(cardRadius, ribbonRadius, fromCenter);
-        // The ripple can bend the transition between the three heights without moving those anchors.
-        const easedDrop = drop + flex * drop * (1 - drop);
-        const height = onCenterCard
-          ? maxHeight - (maxHeight - edgeHeight) * easedDrop
-          : edgeHeight - (edgeHeight - minHeight) * easedDrop;
-        const focus = (height - minHeight) / (maxHeight - minHeight);
-        const top = (maxHeight - height) * (0.52 + curve * 0.10 + flex * 0.16);
-        const bow = curve * Math.min(13, width * 0.014) * focus;
-        return {
-          top,
-          middle: top + height / 2 + bow + flutter * pullAmplitude * 0.26,
-          bottom: top + height,
-          shear: (curve * Math.min(15, width * 0.018) + ripple * Math.min(36, width * 0.04)) * lens,
-        };
-      }
-
-      cards.forEach(({ texture, left, top }) => {
+      cards.forEach(({ texture, image, crop, radius, left, top }) => {
         const x = Math.round((left + offset) * ratio);
-        const baseTop = top * ratio;
-        const sourceMiddle = texture.height / 2;
+        if (x >= canvas.width || x + texture.width <= 0) return;
+        context.save();
+        context.translate(0, top * ratio);
+        clipCard(x, x + texture.width, radius);
+        context.drawImage(image, ...crop, x, 0, texture.width, texture.height);
+
+        // Only the caption and its shade follow the ribbon surface.
         const start = Math.max(0, Math.floor(-x / step) * step);
         const end = Math.min(texture.width, canvas.width - x);
         for (let column = start; column < end; column += step) {
           const span = Math.min(step, texture.width - column);
-          const projectedLeft = Math.round(projectX((x + column) / ratio) * ratio);
-          const projectedRight = Math.round(projectX((x + column + span) / ratio) * ratio);
-          if (projectedRight <= projectedLeft) continue;
           const center = column + span / 2;
-          const ribbon = ribbonAt((x + center) / ratio);
-          const topEdge = ribbon.top * ratio;
-          const middle = ribbon.middle * ratio;
-          const bottomEdge = ribbon.bottom * ratio;
-          const upperScale = (middle - topEdge) / sourceMiddle;
-          const lowerScale = (bottomEdge - middle) / sourceMiddle;
-          const centerY = baseTop + middle;
-          const shear = ribbon.shear * ratio / (bottomEdge - topEdge);
-          const projectedWidth = projectedRight - projectedLeft + (column + span < texture.width ? Math.min(1, Math.abs(shear) * 20) : 0);
-          const upperHeight = sourceMiddle + 1.5 / upperScale;
-          // Stretch the edges around the center of the image and let the same surface lean as it moves.
-          context.setTransform(1, 0, shear, 1, -shear * centerY, 0);
+          const ribbon = ribbonAt(x + center);
           context.drawImage(
-            texture, column, 0, span, upperHeight,
-            projectedLeft, centerY - sourceMiddle * upperScale,
-            projectedWidth, upperHeight * upperScale,
-          );
-          context.drawImage(
-            texture, column, sourceMiddle, span, texture.height - sourceMiddle,
-            projectedLeft, centerY, projectedWidth, (texture.height - sourceMiddle) * lowerScale,
+            texture, column, 0, span, texture.height,
+            x + column, ribbon.top, span, ribbon.bottom - ribbon.top,
           );
         }
+        context.restore();
       });
-      context.resetTransform();
       context.globalCompositeOperation = 'source-atop';
       context.fillStyle = edgeShade;
       context.fillRect(0, 0, canvas.width, canvas.height);
@@ -244,11 +220,8 @@ export function initProgramsGallery(gallery) {
       const gap = pixels('--programs-heading-gap');
       const headingBottom = heading.getBoundingClientRect().bottom - scene.getBoundingClientRect().top;
       minHeight = pixels('--program-card-min-height');
-      edgeHeight = pixels('--program-card-edge-height');
       maxHeight = pixels('--program-card-max-height');
-      cardRadius = cards[0].element.getBoundingClientRect().width / 2;
-      const outerSpace = width / 2 - cardRadius;
-      ribbonRadius = width / 2 - Math.min(12, outerSpace * 0.35);
+      ribbonRadius = width / 2 - 12;
       gallery.style.setProperty('--programs-card-top', `${headingBottom + gap}px`);
       if (width < 600) {
         const introTop = headingBottom + Math.max(0, (gap - intro.offsetHeight) / 2);
@@ -256,7 +229,7 @@ export function initProgramsGallery(gallery) {
       } else {
         intro.style.removeProperty('top');
       }
-      ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+      ratio = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(width * ratio);
       ratio = canvas.width / width;
       canvas.height = Math.round(gallery.clientHeight * ratio);
@@ -267,113 +240,120 @@ export function initProgramsGallery(gallery) {
       edgeShade.addColorStop(1, 'rgb(0 0 0 / 14%)');
       desktop = width >= 1000;
       if (!desktop) intro.style.removeProperty('opacity');
-      startOffset = track.offsetLeft;
+      startOffset = parseFloat(getComputedStyle(track).marginInlineStart);
       introThreshold = intro.offsetLeft + intro.offsetWidth + 9 + width * 0.035;
       const gutter = pixels('--programs-gutter');
       const lastCardWidth = cards.at(-1).element.offsetWidth;
       const endGutter = Math.max(gutter, (width - lastCardWidth) / 2);
       const endOffset = Math.min(gutter, width - track.offsetWidth - endGutter);
-      distance = Math.max(0, startOffset - endOffset);
+      const arrivalDistance = width - startOffset;
+      const galleryDistance = Math.max(0, startOffset - endOffset);
+      distance = arrivalDistance + galleryDistance;
+      const contentHeight = headingBottom + gap + maxHeight + pixels('--programs-bottom-gap');
+      section.style.setProperty('--programs-content-height', `${contentHeight}px`);
       const sceneHeight = scene.getBoundingClientRect().height;
       const visibleHeight = Math.min(sceneHeight, window.innerHeight);
-      scrollDistance = Math.round(Math.max(visibleHeight * 0.85, distance * 0.95));
+      entryDistance = Math.round(visibleHeight * 0.78);
+      trackStartScroll = Math.round(entryDistance * 0.68);
+      // Keep the gallery's scroll rate across the whole track, including the way in.
+      const scrollPerPixel = galleryDistance > 0
+        ? Math.round(Math.max(visibleHeight * 0.85, galleryDistance * 0.95)) / galleryDistance
+        : 0.95;
+      const trackScroll = Math.round(distance * scrollPerPixel);
+      firstCardScroll = trackStartScroll + trackScroll * arrivalDistance / distance;
+      scrollDistance = trackStartScroll + trackScroll;
       section.style.setProperty('--programs-scroll-distance', `${scrollDistance}px`);
-
-      if (stories) {
-        const cardsBottom = headingBottom + gap + maxHeight;
-        const overlap = Math.max(0, sceneHeight - cardsBottom - pixels('--programs-exit-gap'));
-        // Keep the scene pinned while Stories covers the empty space below the cards.
-        section.style.setProperty('--programs-exit-overlap', `${overlap}px`);
-        stories.style.setProperty('--programs-exit-overlap', `${overlap}px`);
-      }
+      curtain.style.setProperty('--room-height', `${curtain.getBoundingClientRect().height}px`);
 
       const trackBounds = track.getBoundingClientRect();
-      const galleryTop = gallery.getBoundingClientRect().top;
+      const galleryBounds = gallery.getBoundingClientRect();
+      const overflow = Math.max(0, galleryBounds.bottom - scene.getBoundingClientRect().bottom);
+      gallery.style.setProperty('--programs-gallery-clip', `${overflow}px`);
       cards.forEach((card) => {
         const bounds = card.element.getBoundingClientRect();
         const media = card.media.getBoundingClientRect();
         card.left = bounds.left - trackBounds.left;
-        card.top = bounds.top - galleryTop;
+        card.top = bounds.top - galleryBounds.top;
         card.texture.width = Math.round(media.width * ratio);
         card.texture.height = Math.round(media.height * ratio);
         card.ready = false;
       });
     }
 
-    function stopRipple() {
-      gsap.ticker.remove(updateRipple);
-      ticking = false;
-      lastScrollTime = 0;
-      pull = 0;
-      ripple = 0;
-    }
-
-    function updateRipple(_time, deltaTime) {
-      const elapsed = Math.min(deltaTime, 48) / 1000;
-      const target = performance.now() - lastScrollTime < 64 ? pull : 0;
-      ripple += (target - ripple) * (1 - Math.exp(-elapsed * (target ? 12 : 7)));
-      if (!target && Math.abs(ripple) < 0.004) stopRipple();
-      render();
-    }
-
     function followScroll({ progress }) {
-      const now = performance.now();
-      const elapsed = lastScrollTime ? gsap.utils.clamp(12, 48, now - lastScrollTime) : 16.7;
-      const speed = (progress - position) * scrollDistance * 1000 / elapsed;
-      pull = Math.sign(speed) * gsap.utils.clamp(0, 1, (Math.abs(speed) - 160) / 1350);
-      lastScrollTime = now;
-      position = progress;
-      if (position === 0) stopRipple();
-      if (pull && !ticking) {
-        ticking = true;
-        gsap.ticker.add(updateRipple);
-        return;
-      }
-      if (!ticking) render();
-    }
-
-    function seek({ progress }) {
-      stopRipple();
-      position = progress;
+      const travelled = progress * scrollDistance;
+      entryProgress = gsap.utils.clamp(0, 1, travelled / entryDistance);
+      position = gsap.utils.clamp(0, 1, (travelled - trackStartScroll) / (scrollDistance - trackStartScroll));
+      curtain.style.setProperty('--room-cover', smoothStep(0.07, 0.82, entryProgress));
+      section.style.setProperty('--programs-peek-progress',
+        smoothStep(trackStartScroll, trackStartScroll + entryDistance * 0.18, travelled));
       render();
     }
 
     measure();
-    const assetLoads = new AbortController();
+    const listeners = new AbortController();
     cards.forEach((card) => card.image.addEventListener('load', () => {
       card.ready = false;
       render();
-    }, { signal: assetLoads.signal }));
+    }, { signal: listeners.signal }));
     document.fonts.addEventListener('loadingdone', () => {
       cards.forEach((card) => { card.ready = false; });
       render();
-    }, { signal: assetLoads.signal });
+    }, { signal: listeners.signal });
 
     const trigger = ScrollTrigger.create({
       trigger: section,
       start: () => `top ${getComputedStyle(scene).top}`,
       end: () => `+=${scrollDistance}`,
+      // Keep the real Stories scene against the gallery until its normal position catches up.
+      animation: stories && gsap.fromTo(stories.querySelector('.stories-scene'),
+        { y: () => -scrollDistance }, { y: 0, ease: 'none' }),
+      scrub: true,
+      invalidateOnRefresh: true,
       onRefreshInit: measure,
-      onRefresh: seek,
+      onRefresh: followScroll,
       onUpdate: followScroll,
     });
-    const layoutResize = new ResizeObserver(() => ScrollTrigger.refresh());
+    gallery.addEventListener('focus', () => {
+      const firstCardTarget = trigger.start + firstCardScroll;
+      if (trigger.scroll() < firstCardTarget && gallery.matches(':focus-visible')) {
+        window.scrollTo({ top: firstCardTarget, behavior: 'instant' });
+      }
+    }, { signal: listeners.signal });
+    stories?.addEventListener('focusin', ({ target }) => {
+      requestAnimationFrame(() => {
+        if (listeners.signal.aborted || trigger.progress >= 1 || !target.matches(':focus-visible')) return;
+        const { top, bottom } = target.getBoundingClientRect();
+        if (top < 0 || bottom > window.innerHeight) {
+          stories.scrollIntoView({ block: 'start', behavior: 'instant' });
+          trigger.update();
+        }
+      });
+    }, { signal: listeners.signal });
+    let refreshFrame;
+    const layoutResize = new ResizeObserver(() => {
+      cancelAnimationFrame(refreshFrame);
+      refreshFrame = requestAnimationFrame(() => ScrollTrigger.refresh());
+    });
     layoutResize.observe(heading);
     layoutResize.observe(scene);
 
     return () => {
       trigger.kill();
       layoutResize.disconnect();
-      assetLoads.abort();
-      stopRipple();
+      cancelAnimationFrame(refreshFrame);
+      listeners.abort();
       gallery.removeAttribute('data-bending');
       section.removeAttribute('data-programs-scroll');
+      section.style.removeProperty('--programs-content-height');
       section.style.removeProperty('--programs-scroll-distance');
-      section.style.removeProperty('--programs-exit-overlap');
-      stories?.style.removeProperty('--programs-exit-overlap');
+      section.style.removeProperty('--programs-peek-progress');
+      curtain.style.removeProperty('--room-height');
+      curtain.style.removeProperty('--room-cover');
       intro.style.removeProperty('opacity');
       intro.style.removeProperty('top');
       gallery.style.removeProperty('--programs-card-top');
+      gallery.style.removeProperty('--programs-gallery-clip');
       track.style.removeProperty('transform');
       canvas.remove();
     };

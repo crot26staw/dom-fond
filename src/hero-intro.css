@@ -1,11 +1,16 @@
+.hero {
+  --hero-night: radial-gradient(ellipse at center, #0a0f1b 18%, #070b12 100%);
+}
+
 .hero-intro {
   --reveal-progress: 0;
   --reveal-center: calc(-495.5px + (100dvh + 495.5px) * var(--reveal-progress));
   position: absolute;
-  z-index: 2;
-  inset: 0;
+  z-index: 4;
+  inset: 0 0 auto;
+  height: 100dvh;
   overflow: hidden;
-  background: radial-gradient(ellipse at center, #0a0f1b 18%, #070b12 100%);
+  background: var(--hero-night);
   color: rgb(255 255 255 / 82%);
   mask-image: linear-gradient(transparent var(--reveal-center), #000 var(--reveal-center)),
     url("./assets/preloader-mask.svg");
