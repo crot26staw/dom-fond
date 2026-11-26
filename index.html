@@ -8,6 +8,7 @@
   </head>
   <body>
     <main class="landing" data-landing id="top">
+      <audio id="background-music" src="./60655cdca47ed56e7802f58.mp3" preload="none"></audio>
       <header class="landing-header">
         <a class="landing-logo" href="#top" aria-label="Фонд ДОМ — начало страницы">
           <picture>
@@ -16,7 +17,7 @@
           </picture>
         </a>
         <div class="landing-actions">
-          <button class="pill pill-sound" type="button" aria-label="Звук" disabled>
+          <button class="pill pill-sound" type="button" aria-label="Фоновая музыка" aria-controls="background-music" aria-pressed="false">
             <img src="./src/assets/music.svg" alt="" width="24" height="18" />
           </button>
           <button class="pill pill-white" type="button" data-dialog="request-help">Нужна помощь</button>
@@ -31,6 +32,7 @@
               <a class="pill pill-outline" href="#transparency">Прозрачность</a>
               <a class="pill pill-outline" href="#faq">Вопросы</a>
               <button class="pill pill-white" type="button" data-dialog="request-help">Нужна помощь</button>
+              <button class="pill pill-outline" type="button" aria-controls="background-music" aria-pressed="false">Фоновая музыка</button>
             </nav>
           </details>
         </div>

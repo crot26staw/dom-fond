@@ -90,8 +90,7 @@ export function initProgramsGallery(gallery) {
   const section = gallery.closest('.programs');
   const scene = gallery.closest('.programs-scene');
   const curtain = scene.querySelector('.programs-curtain');
-  const title = scene.querySelector('.programs-title');
-  const heading = title.querySelector('h2');
+  const heading = scene.querySelector('.programs-title h2');
   const intro = scene.querySelector('.programs-intro');
   const track = gallery.firstElementChild;
 
@@ -170,13 +169,11 @@ export function initProgramsGallery(gallery) {
     function render() {
       const offset = width - distance * position;
       moveTrack(offset - startOffset);
-      const copyOpacity = smoothStep(roomFadeEnd, 1, entryProgress);
       const trackOpacity = desktop
         ? gsap.utils.clamp(0, 1, (offset - introThreshold) / Math.max(1, startOffset - introThreshold))
         : 1;
       curtain.style.opacity = smoothStep(0.07, roomFadeEnd, entryProgress);
-      title.style.opacity = copyOpacity;
-      intro.style.opacity = copyOpacity * trackOpacity;
+      intro.style.opacity = smoothStep(roomFadeEnd, 1, entryProgress) * trackOpacity;
 
       if (document.fonts.status === 'loading' || !cards.every((card) => card.ready || (card.ready = cacheCard(card, ratio)))) {
         gallery.removeAttribute('data-bending');
@@ -332,7 +329,6 @@ export function initProgramsGallery(gallery) {
       section.style.removeProperty('--programs-content-height');
       section.style.removeProperty('--programs-scroll-distance');
       curtain.style.removeProperty('opacity');
-      title.style.removeProperty('opacity');
       intro.style.removeProperty('opacity');
       intro.style.removeProperty('top');
       gallery.style.removeProperty('--programs-card-top');

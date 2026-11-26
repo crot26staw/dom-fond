@@ -251,6 +251,52 @@ function initStoriesGallery(staticGallery) {
   });
 }
 
+function initBackgroundMusic(landing) {
+  const music = landing?.querySelector('#background-music');
+  if (!music) return;
+
+  const buttons = landing.querySelectorAll('button[aria-controls="background-music"]');
+  const volume = 0.2;
+  music.volume = volume;
+  let context;
+
+  function syncButtons() {
+    const playing = !music.paused && !music.ended && !music.error;
+    for (const button of buttons) {
+      button.setAttribute('aria-pressed', String(playing));
+      button.title = playing ? 'Приостановить музыку' : 'Включить музыку';
+    }
+  }
+
+  async function toggleMusic() {
+    if (!music.paused && !music.error) {
+      music.pause();
+      return;
+    }
+
+    try {
+      if (music.error) music.load();
+      // Use a gain node on devices that keep media element volume fixed at 1.
+      if (music.volume !== volume && !context) {
+        context = new AudioContext();
+        const gain = context.createGain();
+        gain.gain.value = volume;
+        context.createMediaElementSource(music).connect(gain).connect(context.destination);
+      }
+      await Promise.all([context?.resume(), music.play()]);
+    } catch (error) {
+      if (error.name !== 'AbortError') music.pause();
+      syncButtons();
+    }
+  }
+
+  for (const event of ['playing', 'pause', 'ended', 'error']) {
+    music.addEventListener(event, syncButtons);
+  }
+  for (const button of buttons) button.addEventListener('click', toggleMusic);
+  syncButtons();
+}
+
 function initLandingHeader(landing) {
   const header = landing?.querySelector('.landing-header');
   const hero = landing?.querySelector('.hero');
@@ -299,6 +345,7 @@ function initLandingHeader(landing) {
 }
 
 initLandingHeader(landing);
+initBackgroundMusic(landing);
 initHeroMotion(landing?.querySelector('.hero'));
 initProgramsGallery(landing?.querySelector('[data-programs-gallery]'));
 initStoryCards(landing?.querySelector('.stories'));

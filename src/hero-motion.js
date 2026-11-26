@@ -44,6 +44,12 @@ export function initHeroMotion(hero) {
 
   gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
     const events = new AbortController();
+    // Reveal the heading through the same window mask as the room, before the section takes over.
+    const roomTitle = hero.nextElementSibling?.querySelector('.programs-title')?.cloneNode(true);
+    if (roomTitle) {
+      roomTitle.querySelector('h2').removeAttribute('id');
+      room.append(roomTitle);
+    }
     const frames = [];
     let progress = 0;
     let scrollProgress = 0;
@@ -159,6 +165,7 @@ export function initHeroMotion(hero) {
       camera.style.removeProperty('transform-origin');
       title.style.removeProperty('opacity');
       room.style.removeProperty('height');
+      roomTitle?.remove();
       still.hidden = true;
       room.hidden = true;
       aperture.removeAttribute('data-opening');

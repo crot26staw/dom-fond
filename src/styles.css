@@ -345,8 +345,8 @@ body:has([data-landing]) {
   backdrop-filter: blur(6px);
 }
 
-.pill-sound:disabled {
-  cursor: default;
+.landing-header [aria-controls="background-music"][aria-pressed="true"] {
+  background: var(--accent);
 }
 
 .landing-menu {
@@ -381,7 +381,7 @@ body:has([data-landing]) {
   background: var(--ink);
 }
 
-.landing-nav [data-dialog] {
+.landing-nav :is([data-dialog], [aria-controls="background-music"]) {
   display: none;
 }
 
@@ -415,7 +415,7 @@ body:has([data-landing]) {
     display: none;
   }
 
-  .landing-menu [data-dialog="request-help"] {
+  .landing-menu :is([data-dialog="request-help"], [aria-controls="background-music"]) {
     display: inline-flex;
   }
 }
