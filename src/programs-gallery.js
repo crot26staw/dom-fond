@@ -90,10 +90,9 @@ export function initProgramsGallery(gallery) {
   const section = gallery.closest('.programs');
   const scene = gallery.closest('.programs-scene');
   const curtain = scene.querySelector('.programs-curtain');
-  const heading = scene.querySelector('h2');
+  const title = scene.querySelector('.programs-title');
+  const heading = title.querySelector('h2');
   const intro = scene.querySelector('.programs-intro');
-  const nextSection = section.nextElementSibling;
-  const stories = nextSection?.matches('.stories') ? nextSection : null;
   const track = gallery.firstElementChild;
 
   gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
@@ -132,6 +131,7 @@ export function initProgramsGallery(gallery) {
     let position = 0;
     let entryProgress = 0;
     let edgeShade;
+    const roomFadeEnd = 0.68;
 
     function ribbonAt(pixelX) {
       const x = pixelX / ratio;
@@ -170,11 +170,13 @@ export function initProgramsGallery(gallery) {
     function render() {
       const offset = width - distance * position;
       moveTrack(offset - startOffset);
-      if (desktop) {
-        const arrivalOpacity = smoothStep(0.18, 0.49, entryProgress);
-        const trackOpacity = gsap.utils.clamp(0, 1, (offset - introThreshold) / Math.max(1, startOffset - introThreshold));
-        intro.style.opacity = arrivalOpacity * trackOpacity;
-      }
+      const copyOpacity = smoothStep(roomFadeEnd, 1, entryProgress);
+      const trackOpacity = desktop
+        ? gsap.utils.clamp(0, 1, (offset - introThreshold) / Math.max(1, startOffset - introThreshold))
+        : 1;
+      curtain.style.opacity = smoothStep(0.07, roomFadeEnd, entryProgress);
+      title.style.opacity = copyOpacity;
+      intro.style.opacity = copyOpacity * trackOpacity;
 
       if (document.fonts.status === 'loading' || !cards.every((card) => card.ready || (card.ready = cacheCard(card, ratio)))) {
         gallery.removeAttribute('data-bending');
@@ -243,7 +245,6 @@ export function initProgramsGallery(gallery) {
       edgeShade.addColorStop(0.62, 'transparent');
       edgeShade.addColorStop(1, 'rgb(0 0 0 / 14%)');
       desktop = width >= 1000;
-      if (!desktop) intro.style.removeProperty('opacity');
       startOffset = parseFloat(getComputedStyle(track).marginInlineStart);
       introThreshold = intro.offsetLeft + intro.offsetWidth + 0.5625 * rootSize + width * 0.035;
       const gutter = pixels('--programs-gutter');
@@ -258,7 +259,7 @@ export function initProgramsGallery(gallery) {
       const sceneHeight = scene.getBoundingClientRect().height;
       const visibleHeight = Math.min(sceneHeight, window.innerHeight);
       entryDistance = Math.round(visibleHeight * 0.78);
-      trackStartScroll = Math.round(entryDistance * 0.68);
+      trackStartScroll = entryDistance * roomFadeEnd;
       // Keep the gallery's scroll rate across the whole track, including the way in.
       const scrollPerPixel = galleryDistance > 0
         ? Math.round(Math.max(visibleHeight * 0.85, galleryDistance * 0.95)) / galleryDistance
@@ -267,12 +268,9 @@ export function initProgramsGallery(gallery) {
       firstCardScroll = trackStartScroll + trackScroll * arrivalDistance / distance;
       scrollDistance = trackStartScroll + trackScroll;
       section.style.setProperty('--programs-scroll-distance', `${scrollDistance}px`);
-      curtain.style.setProperty('--room-height', `${curtain.getBoundingClientRect().height}px`);
 
       const trackBounds = track.getBoundingClientRect();
       const galleryBounds = gallery.getBoundingClientRect();
-      const overflow = Math.max(0, galleryBounds.bottom - scene.getBoundingClientRect().bottom);
-      gallery.style.setProperty('--programs-gallery-clip', `${overflow}px`);
       cards.forEach((card) => {
         const bounds = card.element.getBoundingClientRect();
         const media = card.media.getBoundingClientRect();
@@ -288,9 +286,6 @@ export function initProgramsGallery(gallery) {
       const travelled = progress * scrollDistance;
       entryProgress = gsap.utils.clamp(0, 1, travelled / entryDistance);
       position = gsap.utils.clamp(0, 1, (travelled - trackStartScroll) / (scrollDistance - trackStartScroll));
-      curtain.style.setProperty('--room-cover', smoothStep(0.07, 0.82, entryProgress));
-      section.style.setProperty('--programs-peek-progress',
-        smoothStep(trackStartScroll, trackStartScroll + entryDistance * 0.18, travelled));
       render();
     }
 
@@ -309,11 +304,6 @@ export function initProgramsGallery(gallery) {
       trigger: section,
       start: () => `top ${getComputedStyle(scene).top}`,
       end: () => `+=${scrollDistance}`,
-      // Keep the real Stories scene against the gallery until its normal position catches up.
-      animation: stories && gsap.fromTo(stories.querySelector('.stories-scene'),
-        { y: () => -scrollDistance }, { y: 0, ease: 'none' }),
-      scrub: true,
-      invalidateOnRefresh: true,
       onRefreshInit: measure,
       onRefresh: followScroll,
       onUpdate: followScroll,
@@ -323,16 +313,6 @@ export function initProgramsGallery(gallery) {
       if (trigger.scroll() < firstCardTarget && gallery.matches(':focus-visible')) {
         window.scrollTo({ top: firstCardTarget, behavior: 'instant' });
       }
-    }, { signal: listeners.signal });
-    stories?.addEventListener('focusin', ({ target }) => {
-      requestAnimationFrame(() => {
-        if (listeners.signal.aborted || trigger.progress >= 1 || !target.matches(':focus-visible')) return;
-        const { top, bottom } = target.getBoundingClientRect();
-        if (top < 0 || bottom > window.innerHeight) {
-          stories.scrollIntoView({ block: 'start', behavior: 'instant' });
-          trigger.update();
-        }
-      });
     }, { signal: listeners.signal });
     let refreshFrame;
     const layoutResize = new ResizeObserver(() => {
@@ -351,13 +331,11 @@ export function initProgramsGallery(gallery) {
       section.removeAttribute('data-programs-scroll');
       section.style.removeProperty('--programs-content-height');
       section.style.removeProperty('--programs-scroll-distance');
-      section.style.removeProperty('--programs-peek-progress');
-      curtain.style.removeProperty('--room-height');
-      curtain.style.removeProperty('--room-cover');
+      curtain.style.removeProperty('opacity');
+      title.style.removeProperty('opacity');
       intro.style.removeProperty('opacity');
       intro.style.removeProperty('top');
       gallery.style.removeProperty('--programs-card-top');
-      gallery.style.removeProperty('--programs-gallery-clip');
       track.style.removeProperty('transform');
       canvas.remove();
     };

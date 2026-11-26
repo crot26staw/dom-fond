@@ -162,21 +162,18 @@ function initStoriesGallery(staticGallery) {
 
     let elapsed = 0;
     let width;
-    let photoWidth;
     let photoHeight;
-    let pitch;
-    let wrap;
 
     function draw() {
-      const scale = photoHeight / 215;
-      for (const { row, bow, phase, speed } of rows) {
+      const scale = photoHeight / 174.15;
+      for (const { row, bow, phase, speed, photoWidth, pitch, wrap } of rows) {
         const shift = phase * pitch + elapsed * speed * scale;
         for (let index = 0; index < row.children.length; index += 1) {
           const x = wrap(index * pitch + shift);
           const edge = gsap.utils.clamp(-1, 1, 2 * (x + photoWidth / 2) / width - 1);
           const y = bow * 65 * edge ** 2 * scale;
           const photo = row.children[index];
-          const height = bow === 0 ? (200 + 30 * edge ** 2) * scale : photoHeight;
+          const height = bow === 0 ? (162 + 24.3 * edge ** 2) * scale : photoHeight;
           const tilt = edge * Math.abs(edge) * bow * 10;
           const shearHeight = photoWidth * Math.abs(Math.tan(tilt * Math.PI / 180));
           if (bow === 0) photo.style.height = height + 'px';
@@ -189,16 +186,15 @@ function initStoriesGallery(staticGallery) {
     function resize() {
       const firstRow = rows[0].row;
       width = gallery.clientWidth;
-      const photoStyle = getComputedStyle(firstRow.firstElementChild);
-      photoWidth = parseFloat(photoStyle.width);
-      photoHeight = parseFloat(photoStyle.height);
-      pitch = photoWidth + parseFloat(getComputedStyle(firstRow).columnGap);
-
-      // Loop whole copies of the photo sequence and wrap only beyond the visible area.
-      const count = photos.length * Math.ceil((width + pitch) / (photos.length * pitch));
-      wrap = gsap.utils.wrap(-pitch, (count - 1) * pitch);
-
-      for (const { row, photoOffset } of rows) {
+      photoHeight = parseFloat(getComputedStyle(firstRow.firstElementChild).height);
+      for (const settings of rows) {
+        const { row, photoOffset } = settings;
+        settings.photoWidth = parseFloat(getComputedStyle(row.firstElementChild).width);
+        const pitch = settings.photoWidth + parseFloat(getComputedStyle(row).columnGap);
+        // Loop whole copies of the photo sequence and wrap only beyond the visible area.
+        const count = photos.length * Math.ceil((width + pitch) / (photos.length * pitch));
+        settings.pitch = pitch;
+        settings.wrap = gsap.utils.wrap(-pitch, (count - 1) * pitch);
         while (row.children.length > count) row.lastElementChild.remove();
         for (let index = row.children.length; index < count; index += 1) {
           row.append(photos[(index + photoOffset) % photos.length].cloneNode());

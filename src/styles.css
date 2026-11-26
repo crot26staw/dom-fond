@@ -429,7 +429,7 @@ body:has([data-landing]) {
 }
 
 .programs-scene {
-  height: var(--programs-height);
+  height: max(100dvh, var(--programs-height));
   background: inherit;
 }
 
@@ -445,7 +445,6 @@ body:has([data-landing]) {
 
 .landing .programs-room {
   z-index: -2;
-  height: 100dvh;
   visibility: hidden;
 }
 
@@ -458,21 +457,15 @@ body:has([data-landing]) {
 }
 
 .programs[data-programs-scroll] {
-  --programs-peek: clamp(32px, 6dvh, 64px);
-  --programs-available-height: calc(100dvh - var(--programs-peek));
-  --programs-pinned-height: max(var(--programs-content-height, 0px), min(var(--programs-height), var(--programs-available-height)));
-  --programs-pin-top: min(0px, var(--programs-available-height) - var(--programs-pinned-height));
-  --programs-backdrop-height: max(var(--programs-pinned-height), 100dvh - var(--programs-pin-top));
-  --programs-backdrop-clip: calc((var(--programs-backdrop-height) - var(--programs-pinned-height)) * var(--programs-peek-progress, 0));
+  --programs-pinned-height: max(100dvh, var(--programs-content-height, 0px));
   min-height: calc(var(--programs-pinned-height) + var(--programs-scroll-distance, 0px));
 }
 
 .programs[data-programs-scroll] .programs-scene {
   position: sticky;
   z-index: 1;
-  top: var(--programs-pin-top);
+  top: calc(100dvh - var(--programs-pinned-height));
   height: var(--programs-pinned-height);
-  overflow: visible;
   touch-action: pan-y pinch-zoom;
 }
 
@@ -480,27 +473,8 @@ body:has([data-landing]) {
   visibility: visible;
 }
 
-.programs[data-programs-scroll] :is(.programs-room, .programs-curtain) {
-  height: var(--programs-backdrop-height);
-  clip-path: inset(0 0 var(--programs-backdrop-clip));
-}
-
 .programs[data-programs-scroll] .programs-curtain {
-  --room-mask-height: 991px;
-  --room-cover: 0;
-  --room-mask-edge: calc(var(--room-cover) * var(--room-height, 100dvh) - (1 - var(--room-cover)) * var(--room-mask-height) / 2);
-  mask-image: linear-gradient(#000 var(--room-mask-edge), transparent var(--room-mask-edge)), url("./assets/preloader-mask.svg");
-  mask-position: center, center calc(var(--room-mask-edge) - var(--room-mask-height) / 2);
-  mask-repeat: no-repeat;
-  mask-size: 100% 100%, calc(100% + 1167px) var(--room-mask-height);
-}
-
-.programs[data-programs-scroll] + .stories {
-  z-index: 0;
-}
-
-.programs[data-programs-scroll] + .stories > .stories-scene {
-  background: inherit;
+  opacity: 0;
 }
 
 .programs-backdrop {
@@ -569,7 +543,6 @@ body:has([data-landing]) {
 .programs[data-programs-scroll] .programs-gallery {
   overflow: clip;
   scroll-snap-type: none;
-  clip-path: inset(0 0 var(--programs-gallery-clip, 0px));
 }
 
 .programs-cards {
@@ -668,10 +641,6 @@ body:has([data-landing]) {
     --programs-height: 1024px;
   }
 
-  .programs[data-programs-scroll] .programs-curtain {
-    --room-mask-height: 1231px;
-  }
-
   .programs-title {
     left: 50%;
     width: min(100% - 32px, 469px);
@@ -719,10 +688,6 @@ body:has([data-landing]) {
 @media (max-width: 599px) {
   .programs {
     --programs-height: 812px;
-  }
-
-  .programs[data-programs-scroll] .programs-curtain {
-    --room-mask-height: 934px;
   }
 
   .programs-gallery {
@@ -835,8 +800,8 @@ body:has([data-landing]) {
 
 .stories-gallery,
 .stories-gallery-motion {
-  --gallery-photo-width: 153px;
-  --gallery-photo-gap: clamp(32px, 4.5cqw, 76px);
+  --gallery-photo-width: 123.93px;
+  --gallery-photo-gap: clamp(42.32px, 5.95125cqw, 100.51px);
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -844,20 +809,36 @@ body:has([data-landing]) {
 
 .stories-gallery:not([hidden]) {
   display: grid;
-  grid-template-columns: repeat(4, var(--gallery-photo-width));
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
   align-content: space-around;
+}
+
+.stories-gallery > div {
+  display: flex;
+  width: max-content;
   column-gap: var(--gallery-photo-gap);
 }
 
 .stories-gallery img,
 .stories-gallery-row img {
   width: var(--gallery-photo-width);
-  height: 215px;
+  height: 174.15px;
   object-view-box: inset(12% 8%);
   border-radius: 4px;
   object-fit: cover;
   opacity: 0.64;
+}
+
+.stories-gallery > :nth-child(2),
+.stories-gallery-row:nth-child(2) {
+  /* Keep the extra space in CSS pixels when postcss-pxtorem scales the gallery. */
+  column-gap: calc(var(--gallery-photo-gap) + 20Px);
+}
+
+.stories-gallery > :nth-child(2) img,
+.stories-gallery-row:nth-child(2) img {
+  width: calc(var(--gallery-photo-width) * 0.9);
 }
 
 .stories-gallery .story-photo-soft,
@@ -1297,23 +1278,25 @@ body:has([data-landing]) {
 }
 
 .numbers-scene {
-  --numbers-base-height: min(100dvh, 800px);
   --numbers-top: 120px;
   --numbers-title-size: min(44px, 11dvh);
   --numbers-title-height: calc(28px + 0.8 * var(--numbers-title-size));
   --numbers-house-gap: clamp(12px, calc((100dvh - 300px) * 0.2), 75px);
-  --numbers-house-height: clamp(60px, calc(var(--numbers-base-height) - var(--numbers-top) - var(--numbers-title-height) - var(--numbers-house-gap)), 542px);
-  --numbers-card-floor: calc(100dvh - var(--numbers-base-height) + min(51px, 6.375dvh));
-  --numbers-card-width: min(323px, calc((100vw - 72px) / 4.161));
-  --numbers-card-max-height: 380px;
-  --numbers-card-height: clamp(96px, calc(var(--numbers-base-height) - var(--numbers-top) - var(--numbers-title-height) - 64px), var(--numbers-card-max-height));
+  --numbers-house-max-height: 67.75dvh;
+  --numbers-card-floor: 6.375%;
+  --numbers-card-aspect: calc(323 / 380);
+  --numbers-card-max-width: min(323px, calc((100vw - 72px) / 4.161));
+  --numbers-card-max-height: min(47.5dvh, max(96px, calc(100dvh - var(--numbers-top) - var(--numbers-title-height) - 64px)));
+  --numbers-card-width: min(var(--numbers-card-max-width), var(--numbers-card-max-height) * var(--numbers-card-aspect));
+  --numbers-card-height: calc(var(--numbers-card-width) / var(--numbers-card-aspect));
   --numbers-card-padding: min(32px, calc(var(--numbers-card-width) * 32 / 323), calc(var(--numbers-card-height) * 32 / 380));
   --numbers-value-size: min(44px, calc(var(--numbers-card-width) * 44 / 323), calc(var(--numbers-card-height) / 4));
   --numbers-caption-size: min(14px, calc(var(--numbers-card-width) * 14 / 323), max(11px, calc(var(--numbers-card-height) / 9)));
   position: relative;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
-  align-content: start;
   gap: var(--numbers-house-gap);
   height: 100dvh;
   padding-top: var(--numbers-top);
@@ -1352,8 +1335,9 @@ body:has([data-landing]) {
 
 .numbers-house {
   position: relative;
-  width: calc(var(--numbers-house-height) * 800 / 542);
-  height: var(--numbers-house-height);
+  align-self: end;
+  height: min(100%, var(--numbers-house-max-height), 91.1vw);
+  aspect-ratio: 800 / 542;
   overflow: hidden;
 }
 
@@ -1429,18 +1413,11 @@ body:has([data-landing]) {
 
 @media (max-width: 999px) {
   .numbers-scene {
-    --numbers-base-height: min(100dvh, 1024px);
     --numbers-rail-inset: 20px;
-    --numbers-house-height: min(91.1vw, calc(var(--numbers-base-height) * 0.684), max(60px, calc(var(--numbers-base-height) - var(--numbers-top) - var(--numbers-title-height) - 12px)));
-    --numbers-card-floor: calc(100dvh - var(--numbers-base-height) + min(51px, 5dvh));
-    --numbers-card-width: min(323px, calc(100vw - 2 * var(--numbers-rail-inset)));
-  }
-
-  .numbers-house {
-    position: absolute;
-    bottom: calc(100dvh - var(--numbers-base-height));
-    left: 50%;
-    translate: -50% 0;
+    --numbers-house-max-height: 68.4dvh;
+    --numbers-house-gap: 12px;
+    --numbers-card-floor: 5%;
+    --numbers-card-max-width: min(323px, calc(100vw - 2 * var(--numbers-rail-inset)));
   }
 
   .number-cards-viewport {
@@ -1482,21 +1459,15 @@ body:has([data-landing]) {
 
 @media (max-width: 599px) {
   .numbers-scene {
-    --numbers-base-height: min(100dvh, 812px);
     --numbers-top: 100px;
     --numbers-title-size: min(32px, 11dvh);
     --numbers-rail-inset: 16px;
-    --numbers-card-floor: calc(100dvh - var(--numbers-base-height) + min(35px, 4.3dvh));
-    --numbers-card-width: min(290px, calc(100vw - 2 * var(--numbers-rail-inset)));
-    --numbers-card-max-height: 320px;
+    --numbers-card-floor: 4.3%;
+    --numbers-card-aspect: calc(290 / 320);
+    --numbers-card-max-width: min(290px, calc(100vw - 2 * var(--numbers-rail-inset)));
     --numbers-card-padding: min(32px, calc(var(--numbers-card-height) / 10));
     --numbers-value-size: min(44px, calc(var(--numbers-card-width) * 44 / 290), calc(var(--numbers-card-height) / 4));
     --numbers-caption-size: min(14px, max(11px, calc(var(--numbers-card-height) / 9)));
-  }
-
-  .numbers-house {
-    top: max(calc(var(--numbers-top) + var(--numbers-title-height) + 12px), calc((var(--numbers-base-height) - var(--numbers-house-height)) / 2));
-    bottom: auto;
   }
 
   .number-card {
@@ -1673,9 +1644,11 @@ body:has([data-landing]) {
 }
 
 .documents {
+  --documents-gutter: var(--transparency-gutter);
   display: grid;
+  justify-self: stretch;
   gap: 32px;
-  width: 100%;
+  margin-inline: calc(var(--documents-gutter) - var(--transparency-gutter));
 }
 
 .documents > h3 {
@@ -1693,8 +1666,9 @@ body:has([data-landing]) {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  padding: 24px 0;
+  padding: 24px var(--documents-gutter);
   border-bottom: 1px solid rgb(255 255 255 / 30%);
+  margin-inline: calc(0px - var(--documents-gutter));
   margin-bottom: -1px;
   cursor: pointer;
 }
@@ -1719,7 +1693,7 @@ body:has([data-landing]) {
 
 .document-row::after {
   position: absolute;
-  inset: 24px 16px auto auto;
+  inset: 24px var(--documents-gutter) auto auto;
   width: 24px;
   height: 24px;
   background: center / contain no-repeat url("./assets/transparency-icn-arrow.svg");
@@ -1729,10 +1703,6 @@ body:has([data-landing]) {
 
 .document-row[data-document-active] {
   background: rgb(255 255 255 / 30%);
-}
-
-.document-row[data-document-active] > div {
-  translate: 16px 0;
 }
 
 .document-row[data-document-active] .document-file {
@@ -1791,7 +1761,7 @@ body:has([data-landing]) {
 .document-preview-titles strong {
   grid-area: 1 / 1;
   align-self: start;
-  font: 600 20px / 1.2 var(--display);
+  font: 600 16px / 1.2 var(--display);
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
@@ -1805,10 +1775,6 @@ body:has([data-landing]) {
 @media (prefers-reduced-motion: no-preference) {
   .document-row {
     transition: background-color 220ms ease;
-  }
-
-  .document-row > div {
-    transition: translate 220ms ease;
   }
 
   .document-row .document-file,
@@ -1832,10 +1798,7 @@ body:has([data-landing]) {
 @media (max-width: 999px) {
   .documents {
     --documents-gutter: 20px;
-    justify-self: start;
     gap: 24px;
-    width: calc(100vw - 2 * var(--documents-gutter));
-    margin-inline-start: calc(var(--documents-gutter) - var(--transparency-gutter));
   }
 
   .documents > h3 {
@@ -1843,7 +1806,7 @@ body:has([data-landing]) {
   }
 
   .document-row {
-    padding-inline-end: 40px;
+    padding-inline-end: calc(var(--documents-gutter) + 40px);
   }
 
   .document-row .document-file,
@@ -1852,7 +1815,6 @@ body:has([data-landing]) {
   }
 
   .document-row::after {
-    right: 0;
     opacity: 1;
   }
 }
@@ -1951,7 +1913,7 @@ body:has([data-landing]) {
 
 .bread-copy {
   position: absolute;
-  top: 8.75%;
+  top: 100px;
   left: var(--bread-gutter);
   gap: 32px;
   width: min(585px, 50% - 2 * var(--bread-gutter));
@@ -2486,6 +2448,10 @@ body:has([data-landing]) {
 .social {
   color: var(--white);
   background: #271d13;
+}
+
+.social > .scene-image {
+  filter: brightness(60%);
 }
 
 .social > .section-title {
