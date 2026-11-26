@@ -2763,7 +2763,7 @@ body:has([data-landing]) {
   position: fixed;
   inset: 0;
   width: 100%;
-  height: 100%;
+  height: 100dvh;
   max-width: none;
   max-height: none;
   padding: 0;
@@ -2835,10 +2835,8 @@ body:has(:is(.landing-dialog, .story-dialog)[open]) {
 
 .dialog-layout {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  inset: 20px 20px 20px auto;
   display: flex;
-  align-items: start;
   gap: 11px;
 }
 
@@ -2911,7 +2909,8 @@ body:has(:is(.landing-dialog, .story-dialog)[open]) {
   justify-content: space-between;
   gap: 24px;
   width: 471px;
-  min-height: 760px;
+  height: 100%;
+  overflow-y: auto;
   padding: 50px 32px;
   border-radius: 16px;
   background: #faf8f6;
@@ -3243,11 +3242,9 @@ textarea.dialog-field {
   }
 
   .dialog-layout {
-    position: relative;
-    inset: auto;
-    display: grid;
-    justify-items: center;
-    padding: max(76px, (100dvh - 760px) / 2) 16px 16px;
+    inset: 0;
+    justify-content: center;
+    padding: 76px 16px 16px;
   }
 
   .dialog-layout > [data-dialog-panel] {
@@ -3360,12 +3357,10 @@ textarea.dialog-field {
   .dialog-layout > [data-dialog-panel] { width: 100%; }
 
   .dialog-form {
-    min-height: 710px;
     padding: 50px 16px;
     border-radius: 16px 16px 0 0;
   }
 
-  .dialog-form:has(.dialog-help-title) { min-height: 660px; }
   .dialog-form .dialog-field { font-size: 16px; }
   .dialog-form .payment-icons { flex-wrap: wrap; }
   .dialog-form .donation-frequency label { padding-inline: 4px; text-align: center; }
