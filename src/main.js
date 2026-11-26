@@ -805,8 +805,6 @@ function initDonationScene(section) {
   const backdrop = scene.querySelector('.donation-backdrop');
   const panel = scene.querySelector('.donation-panel');
   const skip = intro.querySelector('[data-donation-skip]');
-  const nextSection = section.nextElementSibling;
-  const social = nextSection?.matches('.social') ? nextSection : null;
 
   gsap.matchMedia().add('(prefers-reduced-motion: no-preference) and (min-height: 620px)', () => {
     section.dataset.donationScroll = '';
@@ -830,39 +828,24 @@ function initDonationScene(section) {
     const trigger = ScrollTrigger.create({
       trigger: section,
       start: 'top top',
-      endTrigger: social ?? section,
-      end: () => social ? `top ${scene.offsetHeight}px` : `+=${section.offsetHeight - scene.offsetHeight}`,
+      end: () => `+=${section.offsetHeight - scene.offsetHeight}`,
       animation: transition,
       scrub: true,
       onUpdate: syncInteractivity,
       onRefresh: syncInteractivity,
     });
 
-    function revealForm() {
+    function skipToForm() {
       const target = gsap.utils.interpolate(trigger.start, trigger.end, 0.96);
       if (lenis) lenis.scrollTo(target, { immediate: true });
       else window.scrollTo(0, target);
       trigger.update();
-    }
-
-    function skipToForm() {
-      revealForm();
       panel.querySelector('input[name="frequency"]:checked').focus({ preventScroll: true });
     }
 
-    function revealCoveredField({ target }) {
-      if (!social) return;
-      requestAnimationFrame(() => {
-        if (document.activeElement !== target || !section.hasAttribute('data-donation-scroll')) return;
-        if (social.getBoundingClientRect().top < target.getBoundingClientRect().bottom) revealForm();
-      });
-    }
-
     skip.addEventListener('click', skipToForm);
-    panel.addEventListener('focusin', revealCoveredField);
     return () => {
       skip.removeEventListener('click', skipToForm);
-      panel.removeEventListener('focusin', revealCoveredField);
       delete section.dataset.donationScroll;
       intro.inert = false;
       panel.inert = false;
@@ -979,7 +962,7 @@ const videos = {
 let videoTrigger;
 const videoError = videoDialog.querySelector('.story-video-error');
 
-landing?.addEventListener('click', (event) => {
+function openVideo(event) {
   const trigger = event.target.closest('[data-story-play], [data-project-video], [data-video]');
   if (!trigger || videoDialog.open) return;
 
@@ -997,7 +980,10 @@ landing?.addEventListener('click', (event) => {
   player.play().catch(() => {
     if (player.error && videoDialog.open) videoError.hidden = false;
   });
-});
+}
+
+landing?.addEventListener('click', openVideo);
+dialog.addEventListener('click', openVideo);
 
 player.addEventListener('loadedmetadata', () => {
   if (player.videoHeight) player.style.setProperty('--video-ratio', player.videoWidth / player.videoHeight);
